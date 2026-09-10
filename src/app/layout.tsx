@@ -1,23 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Nunito_Sans } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { AppShell } from "@/components/layout/AppShell";
+import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { RoommateProvider } from "@/contexts/CurrentRoommateContext";
 import "./globals.css";
 
-const heading = Fraunces({
-  variable: "--font-display",
-  subsets: ["latin"],
-});
-
-const sans = Nunito_Sans({
+const sans = Poppins({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
   title: "RoomOS",
   description: "The apartment operating system for five roommates.",
+  applicationName: "RoomOS",
+  appleWebApp: {
+    capable: true,
+    title: "RoomOS",
+    statusBarStyle: "default",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -30,13 +37,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${heading.variable} ${sans.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${sans.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background font-sans text-foreground">
-        <RoommateProvider>
-          <AppShell>{children}</AppShell>
-        </RoommateProvider>
-        <Toaster />
+        <ThemeProvider>
+          <RoommateProvider>
+            <OfflineBanner />
+            <AppShell>{children}</AppShell>
+          </RoommateProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

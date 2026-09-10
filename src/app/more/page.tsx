@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { UnreadDot } from "@/components/notifications/NotificationBell";
 import {
   Bell,
   Bot,
@@ -29,10 +32,11 @@ export default function MorePage() {
             <Link
               key={link.href}
               href={link.href}
-              className="flex min-h-16 items-center gap-4 rounded-3xl bg-card px-4 shadow-sm ring-1 ring-border"
+              className="flex min-h-16 items-center gap-4 rounded-3xl bg-card px-4 shadow-sm ring-1 ring-border/80 transition active:translate-y-px"
             >
-              <span className="flex size-10 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+              <span className="relative flex size-10 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
                 <Icon className="size-5" />
+                {link.href === "/notifications" ? <UnreadDot compact /> : null}
               </span>
               <span className="text-lg font-medium">{link.label}</span>
             </Link>

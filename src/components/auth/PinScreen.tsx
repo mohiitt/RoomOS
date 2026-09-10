@@ -2,17 +2,23 @@
 
 import { Delete, Loader2Icon } from "lucide-react";
 import { useState } from "react";
+import { copy, pinHey, wrongPinLine } from "@/lib/copy";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
 
 export function PinScreen({
+  roommateName,
   onSubmit,
+  onNotYou,
 }: {
+  roommateName: string | null;
   onSubmit: (pin: string) => Promise<void>;
+  onNotYou: () => void;
 }) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [attempts, setAttempts] = useState(0);
 
   async function submit(nextPin: string) {
     setBusy(true);
@@ -20,7 +26,10 @@ export function PinScreen({
     try {
       await onSubmit(nextPin);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Wrong PIN");
+      const message =
+        submitError instanceof Error ? submitError.message : "Wrong PIN";
+      setError(message === "Pick your name first" ? message : wrongPinLine(attempts));
+      setAttempts((current) => current + 1);
       setPin("");
     } finally {
       setBusy(false);
@@ -42,15 +51,27 @@ export function PinScreen({
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-10">
       <div className="w-full max-w-sm">
-        <p className="text-sm font-medium tracking-[0.2em] text-primary uppercase">
-          RoomOS
+        <img
+          src="/landing-kitchen.png"
+          alt=""
+          className="h-40 w-full rounded-3xl object-cover"
+        />
+        <p className="mt-6 text-sm font-medium tracking-[0.2em] text-primary uppercase">
+          {copy.landingKicker}
         </p>
         <h1 className="font-heading mt-3 text-4xl leading-tight text-foreground">
-          Welcome home.
+          {roommateName ? pinHey(roommateName) : "Welcome home."}
         </h1>
-        <p className="mt-3 text-base text-muted-foreground">
-          Enter the apartment PIN to continue.
-        </p>
+        <p className="mt-3 text-base text-muted-foreground">{copy.pinSub}</p>
+        {roommateName ? (
+          <button
+            type="button"
+            onClick={onNotYou}
+            className="mt-3 text-sm font-medium text-primary"
+          >
+            {copy.pinNotYou}
+          </button>
+        ) : null}
 
         <div className="mt-10 flex justify-center gap-3" aria-label="PIN digits">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -71,7 +92,7 @@ export function PinScreen({
           </p>
         ) : (
           <p className="mt-4 h-5 text-center text-sm text-muted-foreground">
-            {busy ? "Checking…" : " "}
+            {busy ? copy.pinChecking : " "}
           </p>
         )}
 

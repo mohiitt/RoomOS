@@ -1,26 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityRow } from "@/components/dashboard/ActivityRow";
 import { SummaryCard } from "@/components/dashboard/SummaryCard";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { ThemeSwitch } from "@/components/theme/ThemeToggle";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
-import { InventoryCard } from "@/components/inventory/InventoryCard";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import {
   getDashboardData,
   type DashboardData,
 } from "@/lib/dashboard/getDashboardData.ts";
 import { useRealtimeDashboard } from "@/hooks/useRealtime.ts";
-
-function greeting(date = new Date()) {
-  const hour = date.getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
+import { balanceAside, copy, foodAside, greeting } from "@/lib/copy";
 
 export default function HomePage() {
   const { roommate, roommates } = useRoommate();
@@ -45,8 +38,14 @@ export default function HomePage() {
   return (
     <div className="pb-8">
       <PageHeader
-        title={`${greeting()}, ${roommate?.name ?? ""}`}
-        subtitle="What needs attention in the apartment."
+        title={`${greeting(new Date(), roommate?.name)}`}
+        subtitle={copy.homeSubtitle}
+        action={
+          <div className="flex shrink-0 items-center gap-2">
+            <ThemeSwitch />
+            <NotificationBell />
+          </div>
+        }
       />
 
       {!roommate || (data === null && !error) ? (
@@ -55,93 +54,37 @@ export default function HomePage() {
         <p className="text-sm text-destructive">{error}</p>
       ) : data ? (
         <div className="grid gap-5">
-          {data.attention.length > 0 ? (
-            <section className="grid gap-2">
-              <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                Your plate
-              </h2>
-              <ul className="grid gap-2">
-                {data.attention.map((item) => (
-                  <li key={item.id}>
-                    <Link
-                      href={item.href}
-                      className="block rounded-2xl bg-card px-4 py-3 ring-1 ring-border"
-                    >
-                      <p className="text-sm font-medium">{item.title}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{item.detail}</p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : (
-            <p className="text-sm text-muted-foreground">Nothing needs you right now.</p>
-          )}
-
           <div className="grid gap-3">
-            <SummaryCard href="/money" label="Balance" title={data.moneyLabel} />
             <SummaryCard
-              href="/inventory?filter=expiring"
+              href="/money"
+              label="Balance"
+              title={data.moneyLabel}
+              detail={balanceAside(data.moneyNet)}
+            />
+            <SummaryCard
+              href="/inventory"
               label="Food"
               title={data.foodLabel}
-              detail="Open inventory to consume or restock."
+              detail={foodAside(data.expiringItems.length)}
+              imageSrc="/food-bowl.png"
             />
-            <SummaryCard href="/chores" label="Chores" title={data.choreLabel} />
-            <SummaryCard href="/shopping" label="Shopping" title={data.shoppingLabel} />
-            <SummaryCard href="/issues" label="Apartment" title={data.issueLabel} />
+            <SummaryCard
+              href="/money"
+              label="Money"
+              title={data.latestExpenseLabel}
+              detail={copy.moneyAside}
+              imageSrc="/cash-split.png"
+            />
           </div>
 
-          {data.expiringItems.length > 0 ? (
-            <section className="grid gap-3">
-              <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                Food to watch
-              </h2>
-              {data.expiringItems.map((item) => (
-                <InventoryCard
-                  key={item.id}
-                  item={item}
-                  owner={roommates.find((person) => person.id === item.owner_id)}
-                />
-              ))}
-            </section>
-          ) : null}
-
-          {data.lowStockItems.length > 0 &&
-          data.lowStockItems.some(
-            (item) => !data.expiringItems.some((expiring) => expiring.id === item.id)
-          ) ? (
-            <section className="grid gap-3">
-              <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                Low stock
-              </h2>
-              {data.lowStockItems
-                .filter((item) => !data.expiringItems.some((expiring) => expiring.id === item.id))
-                .map((item) => (
-                  <InventoryCard
-                    key={item.id}
-                    item={item}
-                    owner={roommates.find((person) => person.id === item.owner_id)}
-                  />
-                ))}
-            </section>
-          ) : null}
-
           <section className="grid gap-3">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                Recent activity
-              </h2>
-              <Link href="/activity" className="text-sm font-medium text-primary">
-                See all
-              </Link>
-            </div>
+            <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+              Recent activity
+            </h2>
             {data.recentActivity.length === 0 ? (
-              <EmptyState
-                title="Quiet for now."
-                description="Activity shows up once roommates start using inventory, money, and chores."
-              />
+              <p className="text-sm text-muted-foreground">{copy.activityEmpty}</p>
             ) : (
-              data.recentActivity.slice(0, 8).map((event) => (
+              data.recentActivity.slice(0, 3).map((event) => (
                 <ActivityRow key={event.id} event={event} roommates={roommates} />
               ))
             )}

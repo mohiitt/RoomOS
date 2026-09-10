@@ -203,3 +203,37 @@ export type ConcernAttachment = {
   uploaded_by: string | null;
   created_at: string;
 };
+
+export type RecipeIngredient = {
+  id: string;
+  recipe_id: string;
+  name: string;
+  quantity: string;
+  unit: string;
+  sort_order: number;
+};
+
+export type Recipe = {
+  id: string;
+  name: string;
+  instructions: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RecipeWithIngredients = Recipe & {
+  ingredients: RecipeIngredient[];
+};
+
+export type Notification = {
+  id: string;
+  roommate_id: string;
+  type: string;
+  title: string;
+  message: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  is_read: boolean;
+  created_at: string;
+};

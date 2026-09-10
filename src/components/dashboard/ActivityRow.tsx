@@ -15,7 +15,7 @@ export function ActivityRow({
   return (
     <Link
       href={event.href}
-      className="flex items-start gap-3 rounded-2xl bg-card px-4 py-3 ring-1 ring-border"
+      className="flex items-start gap-3 rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border/80"
     >
       <UserAvatar name={person?.name ?? "Roommate"} size="sm" />
       <div className="min-w-0">

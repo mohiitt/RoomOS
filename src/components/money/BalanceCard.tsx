@@ -10,7 +10,7 @@ export function BalanceCard({
   net: number;
 }) {
   return (
-    <section className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border">
+    <section className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border/80">
       <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
         Your balance
       </p>

@@ -13,6 +13,7 @@ import {
 import { weekDueDate } from "@/lib/chores/week.ts";
 import { listConcerns } from "@/lib/issues/queries.ts";
 import { isOpenStatus } from "@/lib/issues/constants.ts";
+import { copy } from "../copy.ts";
 import {
   choreHeadline,
   eventsFromChores,
@@ -23,6 +24,7 @@ import {
   eventsFromShopping,
   foodHeadline,
   issueHeadline,
+  latestExpenseHeadline,
   mergeActivity,
   moneyHeadline,
   shoppingHeadline,
@@ -40,6 +42,7 @@ import type {
 export type DashboardData = {
   moneyLabel: string;
   moneyNet: number;
+  latestExpenseLabel: string;
   foodLabel: string;
   shoppingLabel: string;
   choreLabel: string;
@@ -187,9 +190,12 @@ export async function getDashboardData(input: {
     12
   );
 
+  const latestExpense = expenses[0] ?? null;
+
   return {
     moneyLabel: moneyHeadline(money.totals.net, formatMoney),
     moneyNet: money.totals.net,
+    latestExpenseLabel: latestExpenseHeadline(latestExpense, names, copy.latestExpenseEmpty),
     foodLabel: foodHeadline(expiringItems.length, lowStockItems.length),
     shoppingLabel: shoppingHeadline(needed.length),
     choreLabel: choreHeadline(yourChores.length, pendingThisWeek, templates.length > 0),

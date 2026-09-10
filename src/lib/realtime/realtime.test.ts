@@ -17,7 +17,15 @@ test("feature hooks only reload for their tables", () => {
     false
   );
   assert.equal(
-    changeMatchesTables({ table: "concern_comments" }, ["concerns", "concern_comments"]),
+    changeMatchesTables({ table: "notifications" }, ["notifications"]),
     true
+  );
+  assert.equal(
+    changeMatchesTables({ table: "recipes" }, ["recipes", "recipe_ingredients"]),
+    true
+  );
+  assert.equal(
+    changeMatchesTables({ table: "expenses" }, ["recipes", "recipe_ingredients"]),
+    false
   );
 });

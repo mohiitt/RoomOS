@@ -18,6 +18,7 @@ import {
 } from "@/lib/expenses/queries.ts";
 import { buildMoneyView } from "@/lib/expenses/view.ts";
 import { useRealtimeExpenses } from "@/hooks/useRealtime.ts";
+import { copy } from "@/lib/copy";
 import type { Expense, ExpenseSplit, Settlement } from "@/types/database";
 
 export default function MoneyPage() {
@@ -75,7 +76,7 @@ export default function MoneyPage() {
 
   return (
     <div>
-      <PageHeader title="Money" subtitle="Who owes whom, without the spreadsheet." />
+      <PageHeader title="Money" subtitle={copy.moneySubtitle} />
       {expenses === null || !view || !roommate ? (
         <LoadingSkeleton rows={3} />
       ) : error ? (
@@ -144,8 +145,8 @@ export default function MoneyPage() {
           </h2>
           {expenses.length === 0 ? (
             <EmptyState
-              title="No expenses yet."
-              description="Add your first shared expense."
+              title={copy.moneyEmptyTitle}
+              description={copy.moneyEmptyBody}
             />
           ) : (
             expenses.map((expense) => {

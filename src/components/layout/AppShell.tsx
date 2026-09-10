@@ -1,16 +1,40 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { PinScreen } from "@/components/auth/PinScreen";
 import { RoommateSelector } from "@/components/auth/RoommateSelector";
+import { PwaRoot } from "@/components/pwa/PwaRoot";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import { Button } from "@/components/ui/button";
-import { useApartmentRealtime } from "@/hooks/useRealtime.ts";
+import { useApartmentRealtime, useRealtimeNotifications } from "@/hooks/useRealtime.ts";
+import { generateTimeNotifications } from "@/lib/notifications/queries.ts";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { status, error, roommates, verifyPin, selectRoommate, reload } =
-    useRoommate();
+  const {
+    status,
+    error,
+    roommate,
+    roommates,
+    verifyPin,
+    selectRoommate,
+    switchRoommate,
+    reload,
+  } = useRoommate();
+  const statusRef = useRef(status);
+  statusRef.current = status;
   useApartmentRealtime(status === "ready");
+
+  useEffect(() => {
+    if (status !== "ready") return;
+    void generateTimeNotifications()
+      .then(() => fetch("/api/push/dispatch", { method: "POST" }))
+      .catch(() => undefined);
+  }, [status]);
+  useRealtimeNotifications(() => {
+    if (statusRef.current !== "ready") return;
+    void fetch("/api/push/dispatch", { method: "POST" }).catch(() => undefined);
+  });
 
   if (status === "loading") {
     return (
@@ -32,16 +56,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (status === "pin") {
-    return <PinScreen onSubmit={verifyPin} />;
-  }
-
   if (status === "select") {
     return <RoommateSelector roommates={roommates} onSelect={selectRoommate} />;
   }
 
+  if (status === "pin") {
+    return (
+      <PinScreen
+        roommateName={roommate?.name ?? null}
+        onSubmit={verifyPin}
+        onNotYou={switchRoommate}
+      />
+    );
+  }
+
   return (
     <div className="mx-auto min-h-dvh w-full max-w-md pb-24">
+      <PwaRoot />
       <div className="px-4 pt-6">{children}</div>
       <BottomNavigation />
     </div>

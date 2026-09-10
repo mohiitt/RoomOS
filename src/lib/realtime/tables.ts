@@ -15,6 +15,8 @@ export const CONCERN_TABLES = [
   "concern_comments",
   "concern_attachments",
 ] as const;
+export const RECIPE_TABLES = ["recipes", "recipe_ingredients"] as const;
+export const NOTIFICATION_TABLES = ["notifications"] as const;
 
 export type RoomosChange = {
   table: string;

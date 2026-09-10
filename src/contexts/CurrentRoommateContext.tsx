@@ -10,6 +10,11 @@ import {
 } from "react";
 import type { Roommate } from "@/types/database";
 import {
+  resolveUnlockStatus,
+  statusAfterSelectingRoommate,
+  statusAfterVerifiedPin,
+} from "@/lib/auth/session";
+import {
   getStoredRoommateId,
   hasApartmentAccess,
   setApartmentAccess,
@@ -44,23 +49,15 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
       const access = hasApartmentAccess();
       const people = await listRoommates();
       setRoommates(people);
-
-      if (!access) {
-        setRoommate(null);
-        setStatus("pin");
-        return;
-      }
-
       const storedId = getStoredRoommateId();
       const current = people.find((person) => person.id === storedId) ?? null;
-      if (!current) {
-        setRoommate(null);
-        setStatus("select");
-        return;
-      }
-
+      const next = resolveUnlockStatus({
+        hasAccess: access,
+        storedRoommateId: storedId,
+        roommateIds: people.map((person) => person.id),
+      });
       setRoommate(current);
-      setStatus("ready");
+      setStatus(next);
     } catch (loadError) {
       setError(
         loadError instanceof Error ? loadError.message : "Could not start RoomOS"
@@ -74,6 +71,17 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
   }, [load]);
 
   const verifyPin = useCallback(async (pin: string) => {
+    const storedId = getStoredRoommateId();
+    const nextStatus = statusAfterVerifiedPin(
+      storedId,
+      roommates.map((person) => person.id)
+    );
+    if (nextStatus !== "ready") {
+      setRoommate(null);
+      setStatus("select");
+      throw new Error("Pick your name first");
+    }
+
     const response = await fetch("/api/auth/pin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -85,11 +93,17 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
       throw new Error(payload.error ?? "Wrong PIN");
     }
 
-    setApartmentAccess(true);
-    const storedId = getStoredRoommateId();
     const current = roommates.find((person) => person.id === storedId) ?? null;
+    if (!current) {
+      setApartmentAccess(true);
+      setRoommate(null);
+      setStatus("select");
+      return;
+    }
+
+    setApartmentAccess(true);
     setRoommate(current);
-    setStatus(current ? "ready" : "select");
+    setStatus("ready");
   }, [roommates]);
 
   const selectRoommate = useCallback(
@@ -98,7 +112,7 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
       if (!current) return;
       setStoredRoommateId(current.id);
       setRoommate(current);
-      setStatus("ready");
+      setStatus(statusAfterSelectingRoommate(hasApartmentAccess()));
     },
     [roommates]
   );

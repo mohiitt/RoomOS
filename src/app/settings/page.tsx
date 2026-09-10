@@ -1,9 +1,11 @@
 "use client";
 
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PushSettings } from "@/components/pwa/PushSettings";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { setApartmentAccess } from "@/lib/auth/storage";
 
 export default function SettingsPage() {
@@ -44,6 +46,15 @@ export default function SettingsPage() {
           </Button>
         </div>
       ) : null}
+      <div className="mt-4 rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border">
+        <ThemeToggle />
+      </div>
+      <div className="mt-4 rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border">
+        <p className="text-lg font-semibold">Phone alerts</p>
+        <div className="mt-3">
+          <PushSettings />
+        </div>
+      </div>
     </div>
   );
 }

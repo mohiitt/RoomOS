@@ -8,6 +8,7 @@ import {
   eventsFromExpenses,
   foodHeadline,
   issueHeadline,
+  latestExpenseHeadline,
   mergeActivity,
   moneyHeadline,
   shoppingHeadline,
@@ -25,6 +26,14 @@ test("food, shopping, and issue headlines match the dashboard copy", () => {
   assert.equal(shoppingHeadline(1), "1 item needed");
   assert.equal(issueHeadline(1), "1 open issue");
   assert.equal(issueHeadline(0), "No open issues");
+});
+
+test("latest expense headline is not a second balance line", () => {
+  assert.equal(latestExpenseHeadline(null, { a: "Mohit" }), "No expenses yet");
+  assert.equal(
+    latestExpenseHeadline({ title: "Costco", paid_by: "a" }, { a: "Mohit" }),
+    "Mohit added Costco"
+  );
 });
 
 test("chore headline prefers your pending count", () => {

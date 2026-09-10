@@ -1,6 +1,7 @@
 "use client";
 
 import { UserAvatar } from "@/components/shared/UserAvatar";
+import { copy } from "@/lib/copy";
 import type { Roommate } from "@/types/database";
 
 export function RoommateSelector({
@@ -11,15 +12,20 @@ export function RoommateSelector({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="flex min-h-dvh flex-col px-5 py-10">
+    <div className="flex min-h-dvh flex-col px-5 py-8">
       <div className="mx-auto w-full max-w-md">
-        <p className="text-sm font-medium tracking-[0.2em] text-primary uppercase">
-          RoomOS
+        <img
+          src="/landing-kitchen.png"
+          alt=""
+          className="h-56 w-full rounded-3xl object-cover"
+        />
+        <p className="mt-6 text-sm font-medium tracking-[0.2em] text-primary uppercase">
+          {copy.landingKicker}
         </p>
-        <h1 className="font-heading mt-3 text-4xl leading-tight">Who is this?</h1>
-        <p className="mt-3 text-base text-muted-foreground">
-          Pick your name. You can switch later in Settings.
-        </p>
+        <h1 className="font-heading mt-3 text-4xl leading-tight">
+          {copy.landingHeadline}
+        </h1>
+        <p className="mt-3 text-base text-muted-foreground">{copy.landingSub}</p>
         <div className="mt-8 grid gap-3">
           {roommates.map((roommate) => (
             <button

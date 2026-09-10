@@ -9,6 +9,8 @@ import {
   CONCERN_TABLES,
   INVENTORY_TABLES,
   MONEY_TABLES,
+  NOTIFICATION_TABLES,
+  RECIPE_TABLES,
   SHOPPING_TABLES,
 } from "@/lib/realtime/tables.ts";
 
@@ -72,4 +74,12 @@ export function useRealtimeConcerns(onChange: () => void) {
 
 export function useRealtimeDashboard(onChange: () => void) {
   useRealtimeTables("all", onChange);
+}
+
+export function useRealtimeRecipes(onChange: () => void) {
+  useRealtimeTables(RECIPE_TABLES, onChange);
+}
+
+export function useRealtimeNotifications(onChange: () => void) {
+  useRealtimeTables(NOTIFICATION_TABLES, onChange);
 }

@@ -11,6 +11,7 @@ import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import { isOpenStatus } from "@/lib/issues/constants.ts";
 import { listConcerns } from "@/lib/issues/queries.ts";
 import { useRealtimeConcerns } from "@/hooks/useRealtime.ts";
+import { copy } from "@/lib/copy";
 import type { Concern } from "@/types/database";
 
 export default function IssuesPage() {
@@ -39,7 +40,7 @@ export default function IssuesPage() {
 
   return (
     <div>
-      <PageHeader title="Issues" subtitle="Leaky faucet, broken light, weird smell." />
+      <PageHeader title="Issues" subtitle={copy.issuesSubtitle} />
 
       <div className="mb-4 grid grid-cols-2 gap-2">
         <Button

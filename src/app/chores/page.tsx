@@ -20,6 +20,7 @@ import {
 } from "@/lib/chores/queries.ts";
 import { weekDueDate } from "@/lib/chores/week.ts";
 import { formatShortDate } from "@/lib/dates";
+import { copy } from "@/lib/copy";
 import { useRealtimeChores } from "@/hooks/useRealtime.ts";
 import type { ChoreAssignment, ChoreTemplate } from "@/types/database";
 
@@ -138,7 +139,7 @@ export default function ChoresPage() {
     <div>
       <PageHeader
         title="Chores"
-        subtitle={`This week due ${formatShortDate(dueDate)}.`}
+        subtitle={`${copy.choresSubtitle} Due ${formatShortDate(dueDate)}.`}
       />
 
       {templates === null || !roommate ? (

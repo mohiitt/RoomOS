@@ -27,7 +27,7 @@ export function InventoryCard({
   return (
     <Link
       href={`/inventory/${item.id}`}
-      className="block rounded-3xl bg-card p-4 shadow-sm ring-1 ring-border transition active:translate-y-px"
+      className="block rounded-3xl bg-card p-4 shadow-sm ring-1 ring-border/80 transition active:translate-y-px"
     >
       <div className="flex items-start justify-between gap-3">
         <div>

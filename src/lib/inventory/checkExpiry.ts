@@ -1,5 +1,5 @@
-import type { ExpiryStatus } from "@/types/database";
-import { addDaysISO, todayISO } from "@/lib/dates";
+import type { ExpiryStatus } from "../../types/database.ts";
+import { addDaysISO, todayISO } from "../dates.ts";
 
 export function getExpiryStatus(
   expiryDate: string | null,

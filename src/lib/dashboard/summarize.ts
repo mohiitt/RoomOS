@@ -48,6 +48,16 @@ export function shoppingHeadline(count: number): string {
   return `${count} ${count === 1 ? "item" : "items"} needed`;
 }
 
+export function latestExpenseHeadline(
+  expense: { title: string; paid_by: string } | null,
+  names: Record<string, string>,
+  empty = "No expenses yet"
+): string {
+  if (!expense) return empty;
+  const payer = names[expense.paid_by] ?? "Someone";
+  return `${payer} added ${expense.title}`;
+}
+
 export function mergeActivity(events: ActivityEvent[], limit = 12): ActivityEvent[] {
   return [...events]
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0))
