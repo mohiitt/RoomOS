@@ -38,7 +38,7 @@ No user accounts. A shared 4-digit PIN unlocks the apartment. Then you choose yo
 | **Chores** | Weekly rotation | Five chores, staggered turns, points, streaks, Sunday due dates |
 | **Issues** | Apartment tickets | Priority, assignee, comments, photos, resolve / reopen |
 
-Later phases in the plan: notifications, PWA, and an AI roommate assistant.
+Later phases in the plan: an AI roommate assistant.
 
 ## How it works
 
@@ -53,6 +53,8 @@ Later phases in the plan: notifications, PWA, and an AI roommate assistant.
 - Identity lives in the browser after PIN. There are no logins, emails, or passwords.
 - Postgres on [InsForge](https://insforge.app) is the source of truth. Migrations live in `migrations/`.
 - Open screens subscribe to apartment changes so another roommate's save shows up without a refresh.
+- In-app notifications cover new expenses, low or expiring food, chores, and issues. The bell on Home shows unread count.
+- Install RoomOS on the phone home screen, then allow phone alerts in Settings. iPhone needs Safari → Share → Add to Home Screen, then open from that icon.
 - Expense splits are calculated in **cents** so $10 split three ways always equals $10.
 - Chores rotate weekly among active roommates. Completing early can award a small bonus.
 - Issue photos go in a public `concern-photos` bucket so everyone in the apartment can see them.
@@ -82,6 +84,8 @@ Fill in `.env.local`:
 | `INSFORGE_URL` / `INSFORGE_API_KEY` | Server-side project credentials |
 | `ROOMOS_PIN_HASH` | SHA-256 hex of the 4-digit apartment PIN |
 | `ROOMOS_SESSION_SECRET` | A long random string for the access cookie |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | Web Push keys (`npx web-push generate-vapid-keys`) |
+| `VAPID_MAILTO` | Contact used to sign push messages |
 
 Hash a PIN:
 
@@ -93,6 +97,8 @@ Apply migrations, seed the five roommates in InsForge, then:
 
 ```bash
 npm run dev
+# On a phone, use HTTPS so lock-screen alerts work:
+npm run dev:https
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
