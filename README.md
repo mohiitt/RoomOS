@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<h1 align="center">RoomOS</h1>
 
-## Getting Started
+<p align="center">
+  <strong>The apartment operating system for five roommates.</strong>
+</p>
 
-First, run the development server:
+<p align="center">
+  Open it. Pick who you are. See what matters.
+</p>
+
+<p align="center">
+  <a href="#what-it-does">Features</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#stack">Stack</a> ·
+  <a href="#run-it-locally">Run locally</a>
+</p>
+
+---
+
+RoomOS is a **mobile-first** web app for one apartment — Mohit, Urmi, Jainil, Rahul, and Aditi.
+
+It replaces the group chat, the sticky notes, and the Splitwise tab with one quiet screen:
+
+> What do I owe?  
+> What food needs attention?  
+> What do I need to do?
+
+No user accounts. A shared 4-digit PIN unlocks the apartment. Then you choose your name.
+
+## What it does
+
+| | | |
+| :--- | :--- | :--- |
+| **Home** | The live dashboard | Balances, expiring food, your chores, shopping, open issues, recent activity |
+| **Money** | Splitwise, without Splitwise | Equal / exact / % / shares splits, settle-up, recurring bills |
+| **Food** | Fridge and pantry | Consume, restock, expiry, low-stock, personal vs shared |
+| **Shopping** | The list everyone can see | Manual adds, auto-add from low stock, purchase restocks inventory |
+| **Chores** | Weekly rotation | Five chores, staggered turns, points, streaks, Sunday due dates |
+| **Issues** | Apartment tickets | Priority, assignee, comments, photos, resolve / reopen |
+
+Later phases in the plan: realtime, notifications, PWA, and an AI roommate assistant.
+
+## How it works
+
+```text
+  PIN  →  pick roommate  →  Home
+                               │
+           ┌─────────┬─────────┼─────────┬─────────┐
+           │         │         │         │         │
+         Money     Food     Chores   Shopping   Issues
+```
+
+- Identity lives in the browser after PIN. There are no logins, emails, or passwords.
+- Postgres on [InsForge](https://insforge.app) is the source of truth. Migrations live in `migrations/`.
+- Expense splits are calculated in **cents** so $10 split three ways always equals $10.
+- Chores rotate weekly among active roommates. Completing early can award a small bonus.
+- Issue photos go in a public `concern-photos` bucket so everyone in the apartment can see them.
+
+## Stack
+
+| Layer | Choice |
+| :--- | :--- |
+| App | Next.js 16, React 19 |
+| UI | Tailwind 4, shadcn, Fraunces + Nunito Sans |
+| Backend | InsForge Postgres + Storage |
+| Tests | Node's built-in test runner |
+
+## Run it locally
+
+```bash
+npm install
+cp .env.example .env.local
+```
+
+Fill in `.env.local`:
+
+| Variable | What it is |
+| :--- | :--- |
+| `NEXT_PUBLIC_INSFORGE_URL` | Your InsForge project URL |
+| `NEXT_PUBLIC_INSFORGE_ANON_KEY` | Anon key from the InsForge CLI |
+| `INSFORGE_URL` / `INSFORGE_API_KEY` | Server-side project credentials |
+| `ROOMOS_PIN_HASH` | SHA-256 hex of the 4-digit apartment PIN |
+| `ROOMOS_SESSION_SECRET` | A long random string for the access cookie |
+
+Hash a PIN:
+
+```bash
+node -e "console.log(require('crypto').createHash('sha256').update('1234').digest('hex'))"
+```
+
+Apply migrations, seed the five roommates in InsForge, then:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm test    # money, chores, issues, dashboard
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project layout
 
-## Learn More
+```text
+src/app/            screens (home, money, food, chores, issues…)
+src/components/     mobile UI
+src/lib/            domain logic + InsForge queries
+migrations/         Postgres schema
+```
 
-To learn more about Next.js, take a look at the following resources:
+The full product plan is in [`RoomOS_Full_Implementation_Plan.md`](./RoomOS_Full_Implementation_Plan.md).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+<p align="center">
+  <sub>Built for one apartment. Kept small on purpose.</sub>
+</p>
