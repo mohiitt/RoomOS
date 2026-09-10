@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -19,6 +19,7 @@ import {
   listRecurringExpenses,
   setRecurringActive,
 } from "@/lib/expenses/queries.ts";
+import { useRealtimeExpenses } from "@/hooks/useRealtime.ts";
 import type { RecurringExpense } from "@/types/database";
 
 export default function RecurringPage() {
@@ -36,16 +37,21 @@ export default function RecurringPage() {
     setItems(await listRecurringExpenses());
   }
 
-  useEffect(() => {
-    if (roommate && !paidBy) setPaidBy(roommate.id);
-  }, [roommate, paidBy]);
-
-  useEffect(() => {
+  const refresh = useCallback(() => {
     void load().catch((loadError: unknown) => {
       toast.error(loadError instanceof Error ? loadError.message : "Could not load recurring");
       setItems([]);
     });
   }, []);
+
+  useEffect(() => {
+    if (roommate && !paidBy) setPaidBy(roommate.id);
+  }, [roommate, paidBy]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+  useRealtimeExpenses(refresh);
 
   async function onCreate(event: React.FormEvent) {
     event.preventDefault();

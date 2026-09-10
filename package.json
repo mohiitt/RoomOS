@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-strip-types --test src/lib/expenses/expenses.test.ts src/lib/chores/chores.test.ts src/lib/issues/issues.test.ts src/lib/dashboard/dashboard.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/expenses/expenses.test.ts src/lib/chores/chores.test.ts src/lib/issues/issues.test.ts src/lib/dashboard/dashboard.test.ts src/lib/realtime/realtime.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

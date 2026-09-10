@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -19,6 +19,7 @@ import {
   listSplitsForExpense,
 } from "@/lib/expenses/queries.ts";
 import type { Expense, ExpenseSplit } from "@/types/database";
+import { useRealtimeExpenses } from "@/hooks/useRealtime.ts";
 
 export default function ExpenseDetailPage() {
   const params = useParams<{ id: string }>();
@@ -30,7 +31,7 @@ export default function ExpenseDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     void Promise.all([getExpense(params.id), listSplitsForExpense(params.id)])
       .then(([nextExpense, nextSplits]) => {
         setExpense(nextExpense);
@@ -40,6 +41,11 @@ export default function ExpenseDetailPage() {
         setError(loadError instanceof Error ? loadError.message : "Could not load expense");
       });
   }, [params.id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+  useRealtimeExpenses(load);
 
   async function onDelete() {
     if (!expense) return;

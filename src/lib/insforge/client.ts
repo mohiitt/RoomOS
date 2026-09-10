@@ -1,6 +1,10 @@
 import { createClient } from "@insforge/sdk";
 
+let client: ReturnType<typeof createClient> | null = null;
+
 export function getInsforge() {
+  if (client) return client;
+
   const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL;
   const anonKey = process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY;
 
@@ -8,7 +12,8 @@ export function getInsforge() {
     throw new Error("InsForge environment variables are missing.");
   }
 
-  return createClient({ baseUrl, anonKey });
+  client = createClient({ baseUrl, anonKey });
+  return client;
 }
 
 export function describeError(error: unknown, fallback = "Something went wrong") {

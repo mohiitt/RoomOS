@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -25,6 +25,7 @@ import {
   addInventoryStock,
   consumeInventory,
 } from "@/lib/inventory/updateQuantity";
+import { useRealtimeInventory } from "@/hooks/useRealtime.ts";
 import type { InventoryItem, InventoryTransaction } from "@/types/database";
 
 export default function InventoryItemPage() {
@@ -38,22 +39,21 @@ export default function InventoryItemPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  async function load() {
-    try {
-      const [nextItem, nextHistory] = await Promise.all([
-        getInventoryItem(params.id),
-        listItemTransactions(params.id),
-      ]);
-      setItem(nextItem);
-      setHistory(nextHistory);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Could not load item");
-    }
-  }
+  const reload = useCallback(() => {
+    void Promise.all([getInventoryItem(params.id), listItemTransactions(params.id)])
+      .then(([nextItem, nextHistory]) => {
+        setItem(nextItem);
+        setHistory(nextHistory);
+      })
+      .catch((loadError: unknown) => {
+        setError(loadError instanceof Error ? loadError.message : "Could not load item");
+      });
+  }, [params.id]);
 
   useEffect(() => {
-    void load();
-  }, [params.id]);
+    reload();
+  }, [reload]);
+  useRealtimeInventory(reload);
 
   const owner = roommates.find((person) => person.id === item?.owner_id);
   const expiry = item ? getExpiryStatus(item.expiry_date) : "none";

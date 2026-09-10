@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { FloatingActionButton } from "@/components/layout/FloatingActionButton";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/shopping/queries";
 import type { ShoppingInput } from "@/lib/shopping/schema";
 import type { ShoppingItem, ShoppingStatus } from "@/types/database";
+import { useRealtimeShopping } from "@/hooks/useRealtime.ts";
 
 export default function ShoppingPage() {
   const { roommate, roommates } = useRoommate();
@@ -31,7 +32,7 @@ export default function ShoppingPage() {
   const [busy, setBusy] = useState(false);
   const [purchaseItem, setPurchaseItem] = useState<ShoppingItem | null>(null);
 
-  async function load(status = tab) {
+  const load = useCallback(async (status = tab) => {
     try {
       setError(null);
       setItems(await listShoppingItems(status));
@@ -39,11 +40,16 @@ export default function ShoppingPage() {
       setError(loadError instanceof Error ? loadError.message : "Could not load list");
       setItems([]);
     }
-  }
+  }, [tab]);
+
+  const refresh = useCallback(() => {
+    void load(tab);
+  }, [load, tab]);
 
   useEffect(() => {
     void load(tab);
-  }, [tab]);
+  }, [load, tab]);
+  useRealtimeShopping(refresh);
 
   async function onAdd(values: ShoppingInput) {
     if (!roommate) return;

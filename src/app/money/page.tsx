@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { FloatingActionButton } from "@/components/layout/FloatingActionButton";
 import { BalanceCard } from "@/components/money/BalanceCard";
@@ -17,6 +17,7 @@ import {
   listSplits,
 } from "@/lib/expenses/queries.ts";
 import { buildMoneyView } from "@/lib/expenses/view.ts";
+import { useRealtimeExpenses } from "@/hooks/useRealtime.ts";
 import type { Expense, ExpenseSplit, Settlement } from "@/types/database";
 
 export default function MoneyPage() {
@@ -26,24 +27,37 @@ export default function MoneyPage() {
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const refresh = useCallback(async () => {
+    try {
+      const [nextExpenses, nextSplits, nextSettlements] = await Promise.all([
+        listExpenses(),
+        listSplits(),
+        listSettlements(),
+      ]);
+      setExpenses(nextExpenses);
+      setSplits(nextSplits);
+      setSettlements(nextSettlements);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Could not load money");
+      setExpenses([]);
+    }
+  }, []);
+
   useEffect(() => {
     void (async () => {
       try {
         await generateDueRecurringExpenses();
-        const [nextExpenses, nextSplits, nextSettlements] = await Promise.all([
-          listExpenses(),
-          listSplits(),
-          listSettlements(),
-        ]);
-        setExpenses(nextExpenses);
-        setSplits(nextSplits);
-        setSettlements(nextSettlements);
+        await refresh();
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : "Could not load money");
         setExpenses([]);
       }
     })();
-  }, []);
+  }, [refresh]);
+  const onRealtime = useCallback(() => {
+    void refresh();
+  }, [refresh]);
+  useRealtimeExpenses(onRealtime);
 
   const view = useMemo(() => {
     if (!roommate) return null;

@@ -38,7 +38,7 @@ No user accounts. A shared 4-digit PIN unlocks the apartment. Then you choose yo
 | **Chores** | Weekly rotation | Five chores, staggered turns, points, streaks, Sunday due dates |
 | **Issues** | Apartment tickets | Priority, assignee, comments, photos, resolve / reopen |
 
-Later phases in the plan: realtime, notifications, PWA, and an AI roommate assistant.
+Later phases in the plan: notifications, PWA, and an AI roommate assistant.
 
 ## How it works
 
@@ -52,6 +52,7 @@ Later phases in the plan: realtime, notifications, PWA, and an AI roommate assis
 
 - Identity lives in the browser after PIN. There are no logins, emails, or passwords.
 - Postgres on [InsForge](https://insforge.app) is the source of truth. Migrations live in `migrations/`.
+- Open screens subscribe to apartment changes so another roommate's save shows up without a refresh.
 - Expense splits are calculated in **cents** so $10 split three ways always equals $10.
 - Chores rotate weekly among active roommates. Completing early can award a small bonus.
 - Issue photos go in a public `concern-photos` bucket so everyone in the apartment can see them.

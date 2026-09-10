@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { IssueCard } from "@/components/issues/IssueCard";
 import { FloatingActionButton } from "@/components/layout/FloatingActionButton";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import { isOpenStatus } from "@/lib/issues/constants.ts";
 import { listConcerns } from "@/lib/issues/queries.ts";
+import { useRealtimeConcerns } from "@/hooks/useRealtime.ts";
 import type { Concern } from "@/types/database";
 
 export default function IssuesPage() {
@@ -18,7 +19,7 @@ export default function IssuesPage() {
   const [concerns, setConcerns] = useState<Concern[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     void listConcerns()
       .then(setConcerns)
       .catch((loadError: unknown) => {
@@ -26,6 +27,11 @@ export default function IssuesPage() {
         setConcerns([]);
       });
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+  useRealtimeConcerns(load);
 
   const visible = (concerns ?? []).filter((concern) =>
     tab === "open" ? isOpenStatus(concern.status) : concern.status === "resolved"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -19,6 +19,7 @@ import {
   listSplits,
 } from "@/lib/expenses/queries.ts";
 import { buildMoneyView } from "@/lib/expenses/view.ts";
+import { useRealtimeExpenses } from "@/hooks/useRealtime.ts";
 import type { Settlement } from "@/types/database";
 
 export default function SettlePage() {
@@ -37,8 +38,8 @@ export default function SettlePage() {
     if (roommate && !payerId) setPayerId(roommate.id);
   }, [roommate, payerId]);
 
-  useEffect(() => {
-    void (async () => {
+  const refresh = useCallback(
+    async (seedForm = false) => {
       try {
         const [expenses, splits, nextSettlements] = await Promise.all([
           listExpenses(),
@@ -54,17 +55,29 @@ export default function SettlePage() {
         });
         setDebts(view.debts);
         setSettlements(nextSettlements);
-        const firstOwed = view.debts.find((debt) => debt.fromId === roommate?.id);
-        if (firstOwed) {
-          setReceiverId(firstOwed.toId);
-          setAmount(String(firstOwed.amount));
+        if (seedForm) {
+          const firstOwed = view.debts.find((debt) => debt.fromId === roommate?.id);
+          if (firstOwed) {
+            setReceiverId(firstOwed.toId);
+            setAmount(String(firstOwed.amount));
+          }
         }
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : "Could not load balances");
         setSettlements([]);
       }
-    })();
-  }, [roommate, roommates]);
+    },
+    [roommate, roommates]
+  );
+
+  const onRealtime = useCallback(() => {
+    void refresh(false);
+  }, [refresh]);
+
+  useEffect(() => {
+    void refresh(true);
+  }, [refresh]);
+  useRealtimeExpenses(onRealtime);
 
   const nameFor = (id: string) =>
     roommates.find((person) => person.id === id)?.name ?? "Roommate";

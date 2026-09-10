@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityRow } from "@/components/dashboard/ActivityRow";
 import { SummaryCard } from "@/components/dashboard/SummaryCard";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -13,6 +13,7 @@ import {
   getDashboardData,
   type DashboardData,
 } from "@/lib/dashboard/getDashboardData.ts";
+import { useRealtimeDashboard } from "@/hooks/useRealtime.ts";
 
 function greeting(date = new Date()) {
   const hour = date.getHours();
@@ -26,7 +27,7 @@ export default function HomePage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!roommate) return;
     void getDashboardData({ viewerId: roommate.id, roommates })
       .then(setData)
@@ -35,6 +36,11 @@ export default function HomePage() {
         setData(null);
       });
   }, [roommate, roommates]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+  useRealtimeDashboard(load);
 
   return (
     <div className="pb-8">

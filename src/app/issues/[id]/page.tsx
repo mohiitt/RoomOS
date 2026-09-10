@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -29,6 +29,7 @@ import {
   updateConcern,
   uploadConcernPhoto,
 } from "@/lib/issues/queries.ts";
+import { useRealtimeConcerns } from "@/hooks/useRealtime.ts";
 import type {
   Concern,
   ConcernAttachment,
@@ -45,7 +46,7 @@ export default function IssueDetailPage() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setError(null);
       const [nextConcern, nextComments, nextPhotos] = await Promise.all([
@@ -59,11 +60,12 @@ export default function IssueDetailPage() {
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Could not load issue");
     }
-  }
+  }, [params.id]);
 
   useEffect(() => {
     void load();
-  }, [params.id]);
+  }, [load]);
+  useRealtimeConcerns(load);
 
   async function onStatus(status: ConcernStatus) {
     if (!concern) return;

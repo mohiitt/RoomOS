@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ChoreCard } from "@/components/chores/ChoreCard";
 import { FloatingActionButton } from "@/components/layout/FloatingActionButton";
@@ -20,6 +20,7 @@ import {
 } from "@/lib/chores/queries.ts";
 import { weekDueDate } from "@/lib/chores/week.ts";
 import { formatShortDate } from "@/lib/dates";
+import { useRealtimeChores } from "@/hooks/useRealtime.ts";
 import type { ChoreAssignment, ChoreTemplate } from "@/types/database";
 
 export default function ChoresPage() {
@@ -46,9 +47,23 @@ export default function ChoresPage() {
     }
   }
 
+  const refresh = useCallback(async () => {
+    try {
+      const [nextTemplates, nextAssignments] = await Promise.all([
+        listChoreTemplates(),
+        listChoreAssignments(),
+      ]);
+      setTemplates(nextTemplates);
+      setAssignments(nextAssignments);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Could not load chores");
+    }
+  }, []);
+
   useEffect(() => {
     void load();
   }, []);
+  useRealtimeChores(refresh);
 
   const templateById = useMemo(
     () => new Map((templates ?? []).map((template) => [template.id, template])),

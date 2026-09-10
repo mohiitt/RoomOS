@@ -5,10 +5,12 @@ import { PinScreen } from "@/components/auth/PinScreen";
 import { RoommateSelector } from "@/components/auth/RoommateSelector";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import { Button } from "@/components/ui/button";
+import { useApartmentRealtime } from "@/hooks/useRealtime.ts";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { status, error, roommates, verifyPin, selectRoommate, reload } =
     useRoommate();
+  useApartmentRealtime(status === "ready");
 
   if (status === "loading") {
     return (

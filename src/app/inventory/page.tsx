@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { FloatingActionButton } from "@/components/layout/FloatingActionButton";
@@ -16,6 +16,7 @@ import {
   type InventoryFilter,
 } from "@/lib/inventory/filterItems";
 import { listInventoryItems } from "@/lib/inventory/queries";
+import { useRealtimeInventory } from "@/hooks/useRealtime.ts";
 import type { InventoryItem } from "@/types/database";
 
 const FILTERS = new Set<InventoryFilter>([
@@ -50,7 +51,7 @@ function InventoryPageContent() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<InventoryFilter>(initialFilter);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     void listInventoryItems()
       .then(setItems)
       .catch((loadError: unknown) => {
@@ -58,6 +59,11 @@ function InventoryPageContent() {
         setItems([]);
       });
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+  useRealtimeInventory(load);
 
   const visible = useMemo(
     () =>
