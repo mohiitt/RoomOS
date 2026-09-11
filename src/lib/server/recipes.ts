@@ -100,6 +100,24 @@ export async function createRecipe(input: {
   return recipe;
 }
 
+export async function updateRecipe(input: {
+  id: string;
+  name: string;
+  instructions: string;
+  ingredients: readonly RecipeIngredientInput[];
+}): Promise<RecipeWithIngredients> {
+  const ingredients = cleanIngredients(input.ingredients);
+  if (ingredients.length === 0) throw new Error("Add at least one ingredient");
+  const { error } = await getAdminInsforge().database.rpc("update_recipe", {
+    p_id: input.id,
+    p_name: input.name.trim(),
+    p_instructions: input.instructions.trim(),
+    p_ingredients: ingredients,
+  });
+  if (error) throw new Error(describeError(error, "Could not update recipe"));
+  return getRecipe(input.id);
+}
+
 export async function deleteRecipe(id: string): Promise<void> {
   const { error } = await getAdminInsforge().database.from("recipes").delete().eq("id", id);
   if (error) throw new Error(describeError(error, "Could not delete recipe"));

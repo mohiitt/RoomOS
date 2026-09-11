@@ -86,8 +86,8 @@ export function PushSettings() {
     <div className="grid gap-2">
       <p className="text-sm text-muted-foreground">
         {subscribed
-          ? "This phone will get banners for expenses, chores, expiring food, and assigned issues."
-          : "Allow alerts so this phone pings even when RoomOS is closed."}
+          ? "This device is subscribed. Phone and laptop can each have their own alerts — enable push on every device you want pinged."
+          : "Allow alerts so this device pings even when RoomOS is closed. Each phone or laptop is separate."}
       </p>
       {subscribed ? (
         <>

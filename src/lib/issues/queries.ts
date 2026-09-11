@@ -46,6 +46,7 @@ export async function updateConcern(
     status?: ConcernStatus;
     assignedTo?: string | null;
     priority?: ConcernPriority;
+    title?: string;
   }
 ): Promise<Concern> {
   return apiJson<Concern>(`/api/issues/${id}`, {

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -10,12 +11,13 @@ import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import { useRealtimeRecipes } from "@/hooks/useRealtime.ts";
 import { formatIngredient } from "@/lib/recipes/format.ts";
 import { deleteRecipe, getRecipe } from "@/lib/recipes/queries.ts";
+import { createShoppingItem } from "@/lib/shopping/queries.ts";
 import type { RecipeWithIngredients } from "@/types/database";
 
 export default function RecipeDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { roommates } = useRoommate();
+  const { roommate, roommates } = useRoommate();
   const [recipe, setRecipe] = useState<RecipeWithIngredients | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -35,6 +37,27 @@ export default function RecipeDetailPage() {
   useRealtimeRecipes(load);
 
   const author = roommates.find((person) => person.id === recipe?.created_by);
+
+  async function onShop() {
+    if (!recipe || !roommate) return;
+    setBusy(true);
+    try {
+      for (const ingredient of recipe.ingredients) {
+        await createShoppingItem({
+          name: ingredient.name,
+          requested_quantity: Number(ingredient.quantity) || null,
+          unit: ingredient.unit || null,
+          reason: "planned",
+          added_by: roommate.id,
+        });
+      }
+      toast.success("Ingredients added to shopping");
+    } catch (shopError) {
+      toast.error(shopError instanceof Error ? shopError.message : "Could not add to shopping");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function onDelete() {
     if (!recipe) return;
@@ -87,9 +110,24 @@ export default function RecipeDetailPage() {
 
       <Button
         type="button"
-        variant="ghost"
         size="lg"
         className="mt-4 min-h-11 w-full"
+        disabled={busy}
+        onClick={() => void onShop()}
+      >
+        Add missing ingredients to shopping
+      </Button>
+      <Link
+        href={`/recipes/${recipe.id}/edit`}
+        className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-border px-4 text-sm font-medium"
+      >
+        Edit recipe
+      </Link>
+      <Button
+        type="button"
+        variant="ghost"
+        size="lg"
+        className="mt-2 min-h-11 w-full"
         disabled={busy}
         onClick={() => void onDelete()}
       >

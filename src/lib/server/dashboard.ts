@@ -5,7 +5,6 @@ import { listInventoryItems, listRecentInventoryTransactions } from "@/lib/serve
 import { listShoppingItems } from "@/lib/server/shopping";
 import { listApartmentBalances, listExpenses, listSettlements } from "@/lib/server/expenses";
 import { moneyViewFromNets } from "@/lib/expenses/view.ts";
-import { formatMoney } from "@/lib/expenses/money.ts";
 import {
   generateDueChoreAssignments,
   listChoreAssignments,
@@ -14,50 +13,31 @@ import {
 import { weekDueDate } from "@/lib/chores/week.ts";
 import { listConcerns } from "@/lib/server/issues";
 import { isOpenStatus } from "@/lib/issues/constants.ts";
-import { copy } from "@/lib/copy.ts";
+import { todayISO } from "@/lib/dates.ts";
+import { buildAttention } from "@/lib/dashboard/attention.ts";
 import {
-  choreHeadline,
+  apartmentVibe,
+  choreStatLabel,
+  foodStatLabel,
+  issueStatLabel,
+  moneyStatLabel,
+  roommateOfTheWeek,
+  shoppingStatLabel,
+  streakCopy,
+} from "@/lib/dashboard/vibe.ts";
+import { calculateStreak, totalPoints } from "@/lib/chores/calculateStreak.ts";
+import {
   eventsFromChores,
   eventsFromConcerns,
   eventsFromExpenses,
   eventsFromInventory,
   eventsFromSettlements,
   eventsFromShopping,
-  foodHeadline,
-  issueHeadline,
-  latestExpenseHeadline,
   mergeActivity,
-  moneyHeadline,
-  shoppingHeadline,
-  type ActivityEvent,
   type AttentionItem,
 } from "@/lib/dashboard/summarize.ts";
-import type {
-  ChoreAssignment,
-  ChoreTemplate,
-  Concern,
-  InventoryItem,
-  Roommate,
-} from "@/types/database";
-
-export type DashboardData = {
-  moneyLabel: string;
-  moneyNet: number;
-  latestExpenseLabel: string;
-  foodLabel: string;
-  shoppingLabel: string;
-  choreLabel: string;
-  issueLabel: string;
-  shoppingCount: number;
-  openConcernCount: number;
-  expiringItems: InventoryItem[];
-  lowStockItems: InventoryItem[];
-  yourChores: { assignment: ChoreAssignment; template?: ChoreTemplate }[];
-  yourIssues: Concern[];
-  attention: AttentionItem[];
-  recentActivity: ActivityEvent[];
-  errors: Partial<Record<"inventory" | "shopping" | "money" | "chores" | "issues" | "activity", string>>;
-};
+import type { DashboardData } from "@/lib/dashboard/types.ts";
+import type { Roommate } from "@/types/database";
 
 function settled<T>(result: PromiseSettledResult<T>, fallback: T): T {
   return result.status === "fulfilled" ? result.value : fallback;
@@ -118,6 +98,7 @@ export async function getDashboardData(input: {
     isLowStock(item.quantity, item.minimum_quantity)
   );
   const due = weekDueDate();
+  const today = todayISO();
   const thisWeek = assignments.filter((assignment) => assignment.due_date === due);
   const yourChores = assignments
     .filter(
@@ -128,55 +109,68 @@ export async function getDashboardData(input: {
       assignment,
       template: templates.find((template) => template.id === assignment.chore_template_id),
     }));
-  const pendingThisWeek = thisWeek.filter((assignment) => assignment.status === "pending").length;
+  const overdueChores = yourChores
+    .filter((chore) => chore.assignment.due_date < today)
+    .map((chore) => ({
+      id: chore.assignment.id,
+      name: chore.template?.name ?? "Chore",
+      dueDate: chore.assignment.due_date,
+    }));
   const openConcerns = concerns.filter((concern) => isOpenStatus(concern.status));
   const yourIssues = openConcerns.filter(
     (concern) => concern.assigned_to === input.viewerId
   );
+  const openUrgent = openConcerns.filter(
+    (concern) => concern.priority === "urgent" || concern.priority === "high"
+  ).length;
+  const oldestUnsettledExpenseDate =
+    money.totals.net > 0
+      ? expenses
+          .filter((expense) => expense.paid_by === input.viewerId)
+          .map((expense) => expense.expense_date)
+          .sort()[0] ?? null
+      : null;
 
-  const attention: AttentionItem[] = [];
-  if (money.totals.net < 0) {
-    attention.push({
-      id: "money",
-      href: "/money",
-      title: moneyHeadline(money.totals.net, formatMoney),
-      detail: "Open money to settle up.",
-    });
-  } else if (money.totals.net > 0) {
-    attention.push({
-      id: "money-owed",
-      href: "/money",
-      title: moneyHeadline(money.totals.net, formatMoney),
-      detail: "Someone still needs to pay you.",
-    });
-  }
-  for (const chore of yourChores) {
-    attention.push({
-      id: `chore-${chore.assignment.id}`,
-      href: "/chores",
-      title: chore.template?.name ?? "Chore",
-      detail: `Due this week`,
-    });
-  }
-  if (expiringItems.length > 0) {
-    attention.push({
-      id: "food",
-      href: "/inventory?filter=expiring",
-      title:
-        expiringItems.length === 1
-          ? `${expiringItems[0].name} needs attention`
-          : `${expiringItems.length} foods expiring`,
-      detail: "Check the fridge and pantry.",
-    });
-  }
-  for (const issue of yourIssues) {
-    attention.push({
-      id: `issue-${issue.id}`,
-      href: `/issues/${issue.id}`,
-      title: issue.title,
-      detail: "Assigned to you",
-    });
-  }
+  const attention: AttentionItem[] = buildAttention({
+    viewerId: input.viewerId,
+    moneyNet: money.totals.net,
+    oldestUnsettledExpenseDate,
+    overdueChores,
+    expiringItems: expiringItems.map((item) => ({ id: item.id, name: item.name })),
+    yourIssues: yourIssues.map((issue) => ({ id: issue.id, title: issue.title })),
+    today,
+  });
+
+  const viewerAssignments = assignments.filter(
+    (assignment) => assignment.assigned_to === input.viewerId
+  );
+  const streakWeeks = calculateStreak(
+    viewerAssignments.map((assignment) => ({
+      status: assignment.status,
+      dueDate: assignment.due_date,
+    }))
+  );
+  const weekScores = input.roommates.map((person) => {
+    const theirs = thisWeek.filter(
+      (assignment) =>
+        assignment.assigned_to === person.id && assignment.status === "completed"
+    );
+    return {
+      id: person.id,
+      name: person.name,
+      points: totalPoints(
+        theirs.map((assignment) => ({
+          status: assignment.status,
+          pointsAwarded: assignment.points_awarded,
+        }))
+      ),
+      earliestCompletedAt:
+        theirs
+          .map((assignment) => assignment.completed_at)
+          .filter((value): value is string => Boolean(value))
+          .sort()[0] ?? null,
+    };
+  });
 
   const itemNames = Object.fromEntries(items.map((item) => [item.id, item.name]));
   const choreNames = Object.fromEntries(templates.map((template) => [template.id, template.name]));
@@ -192,8 +186,6 @@ export async function getDashboardData(input: {
     50
   );
 
-  const latestExpense = expenses[0] ?? null;
-
   const errors: DashboardData["errors"] = {};
   if (itemsResult.status === "rejected") errors.inventory = "Could not load food.";
   if (neededResult.status === "rejected" || purchasedResult.status === "rejected") {
@@ -208,14 +200,22 @@ export async function getDashboardData(input: {
   if (concernsResult.status === "rejected") errors.issues = "Could not load issues.";
   if (transactionsResult.status === "rejected") errors.activity = "Could not load activity.";
 
+  const moneyNet = errors.money ? 0 : money.totals.net;
+  const vibe = apartmentVibe({
+    overdueChores: overdueChores.length,
+    openUrgent,
+    moneyNet,
+    expiring: expiringItems.length,
+  });
+
   return {
-    moneyLabel: errors.money ? "Balance unavailable" : moneyHeadline(money.totals.net, formatMoney),
-    moneyNet: errors.money ? 0 : money.totals.net,
-    latestExpenseLabel: errors.money ? "Money is unavailable right now" : latestExpenseHeadline(latestExpense, names, copy.latestExpenseEmpty),
-    foodLabel: errors.inventory ? "Food unavailable" : foodHeadline(expiringItems.length, lowStockItems.length),
-    shoppingLabel: errors.shopping ? "Shopping unavailable" : shoppingHeadline(needed.length),
-    choreLabel: errors.chores ? "Chores unavailable" : choreHeadline(yourChores.length, pendingThisWeek, templates.length > 0),
-    issueLabel: errors.issues ? "Issues unavailable" : issueHeadline(openConcerns.length),
+    vibe,
+    moneyStat: errors.money ? "—" : moneyStatLabel(moneyNet),
+    moneyNet,
+    foodStat: errors.inventory ? "—" : foodStatLabel(expiringItems.length, lowStockItems.length),
+    shoppingStat: errors.shopping ? "—" : shoppingStatLabel(needed.length),
+    choreStat: errors.chores ? "—" : choreStatLabel(yourChores.length, overdueChores.length),
+    issueStat: errors.issues ? "—" : issueStatLabel(openConcerns.length),
     shoppingCount: needed.length,
     openConcernCount: openConcerns.length,
     expiringItems: expiringItems.slice(0, 3),
@@ -224,6 +224,8 @@ export async function getDashboardData(input: {
     yourIssues,
     attention,
     recentActivity,
+    roommateOfWeek: roommateOfTheWeek(weekScores),
+    streak: { weeks: streakWeeks, ...streakCopy(streakWeeks) },
     errors,
   };
 }

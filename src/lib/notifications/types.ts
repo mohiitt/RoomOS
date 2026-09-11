@@ -9,6 +9,8 @@ export const NOTIFICATION_TYPES = [
   "concern_assigned",
   "concern_resolved",
   "shopping_added",
+  "money_nudge",
+  "chore_swap",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

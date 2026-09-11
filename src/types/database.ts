@@ -136,6 +136,23 @@ export type RecurringExpense = {
   next_run_at: string;
   is_active: boolean;
   created_at: string;
+  split_config: RecurringSplitShare[];
+};
+
+export type RecurringSplitShare = {
+  roommate_id: string;
+  owed_amount: number;
+  percentage: number | null;
+  shares: number | null;
+};
+
+export type ExpenseAttachment = {
+  id: string;
+  expense_id: string;
+  storage_path: string;
+  storage_url: string;
+  uploaded_by: string | null;
+  created_at: string;
 };
 
 export type ChoreFrequency = "weekly" | "monthly";
@@ -168,6 +185,15 @@ export type ChoreAssignment = {
   completed_at: string | null;
   completed_by: string | null;
   points_awarded: number | null;
+  created_at: string;
+};
+
+export type ChoreSwapRequest = {
+  id: string;
+  assignment_id: string;
+  from_roommate_id: string;
+  to_roommate_id: string;
+  status: "pending" | "accepted" | "declined" | "cancelled";
   created_at: string;
 };
 

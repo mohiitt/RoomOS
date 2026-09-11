@@ -41,7 +41,7 @@ test("valid apartment access with a stored name is ready", () => {
   );
 });
 
-test("switch roommate with valid access stays on names, no PIN", () => {
+test("switch roommate always requires the PIN again", () => {
   assert.equal(
     resolveUnlockStatus({
       hasAccess: true,
@@ -50,7 +50,7 @@ test("switch roommate with valid access stays on names, no PIN", () => {
     }),
     "select"
   );
-  assert.equal(statusAfterSelectingRoommate(true), "ready");
+  assert.equal(statusAfterSelectingRoommate(true), "pin");
   assert.equal(statusAfterSelectingRoommate(false), "pin");
 });
 

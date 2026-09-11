@@ -11,6 +11,7 @@ export type ChoreFormValues = {
   name: string;
   description: string | null;
   points: number;
+  frequency: "weekly" | "monthly";
   roommateIds: string[];
 };
 
@@ -18,17 +19,26 @@ export function ChoreForm({
   roommates,
   busy,
   submitLabel,
+  initial,
   onSubmit,
 }: {
   roommates: Roommate[];
   busy: boolean;
   submitLabel: string;
+  initial?: {
+    name: string;
+    description: string | null;
+    points: number;
+    frequency: "weekly" | "monthly";
+    roommateIds: string[];
+  };
   onSubmit: (values: ChoreFormValues) => Promise<void>;
 }) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [points, setPoints] = useState("10");
-  const [selected, setSelected] = useState(roommates.map((person) => person.id));
+  const [name, setName] = useState(initial?.name ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [points, setPoints] = useState(String(initial?.points ?? 10));
+  const [frequency, setFrequency] = useState<"weekly" | "monthly">(initial?.frequency ?? "weekly");
+  const [selected, setSelected] = useState(initial?.roommateIds ?? roommates.map((person) => person.id));
   const [error, setError] = useState<string | null>(null);
 
   function toggle(id: string) {
@@ -58,6 +68,7 @@ export function ChoreForm({
       name: trimmed,
       description: description.trim() || null,
       points: numericPoints,
+      frequency,
       roommateIds: roommates.filter((person) => selected.includes(person.id)).map((person) => person.id),
     });
   }
@@ -93,6 +104,18 @@ export function ChoreForm({
           value={points}
           onChange={(event) => setPoints(event.target.value)}
         />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="chore-frequency">Frequency</Label>
+        <select
+          id="chore-frequency"
+          value={frequency}
+          onChange={(event) => setFrequency(event.target.value as "weekly" | "monthly")}
+          className="min-h-12 rounded-lg border border-input bg-transparent px-3 text-base"
+        >
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
       </div>
       <div className="grid gap-2">
         <Label>Rotation</Label>

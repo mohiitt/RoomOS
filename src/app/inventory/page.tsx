@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import {
   filterInventoryItems,
+  sortInventoryForUseSoon,
   type InventoryFilter,
 } from "@/lib/inventory/filterItems";
 import { listInventoryItems } from "@/lib/inventory/queries";
@@ -72,11 +73,13 @@ function InventoryPageContent() {
 
   const visible = useMemo(
     () =>
-      filterInventoryItems(items ?? [], {
-        query,
-        filter,
-        roommateId: roommate?.id ?? "",
-      }),
+      sortInventoryForUseSoon(
+        filterInventoryItems(items ?? [], {
+          query,
+          filter,
+          roommateId: roommate?.id ?? "",
+        })
+      ),
     [items, query, filter, roommate?.id]
   );
 
@@ -110,6 +113,11 @@ function InventoryPageContent() {
             className="mb-3 min-h-12"
           />
           <InventoryFilters value={filter} onChange={setFilter} />
+          {filter === "all" ? (
+            <p className="mt-2 text-xs text-foreground/80">
+              Use-soon items float to the top.
+            </p>
+          ) : null}
 
           <div className="mt-4 pb-16">
             {items === null ? (

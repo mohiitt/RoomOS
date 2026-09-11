@@ -4,6 +4,7 @@ import type {
   ChoreFrequency,
   ChoreRotation,
   ChoreStatus,
+  ChoreSwapRequest,
   ChoreTemplate,
 } from "@/types/database";
 
@@ -48,6 +49,38 @@ export async function createChore(input: {
     body: JSON.stringify(input),
   });
   return payload.id;
+}
+
+export async function updateChore(input: {
+  id: string;
+  name: string;
+  description: string | null;
+  points?: number;
+  frequency?: ChoreFrequency;
+  roommateIds: string[];
+}): Promise<void> {
+  await apiJson(`/api/chores/${input.id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function listPendingSwaps(): Promise<ChoreSwapRequest[]> {
+  return apiJson<ChoreSwapRequest[]>("/api/chores/swaps");
+}
+
+export async function requestChoreSwap(assignmentId: string, toRoommateId: string): Promise<void> {
+  await apiJson("/api/chores/swaps", {
+    method: "POST",
+    body: JSON.stringify({ assignmentId, toRoommateId }),
+  });
+}
+
+export async function respondChoreSwap(id: string, accept: boolean): Promise<void> {
+  await apiJson(`/api/chores/swaps/${id}`, {
+    method: "POST",
+    body: JSON.stringify({ accept }),
+  });
 }
 
 export async function seedDefaultChores(createdBy: string, roommateIds: string[]): Promise<void> {

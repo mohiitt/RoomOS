@@ -9,6 +9,17 @@ const schema = z.object({
   category: z.string().max(40).nullable(),
   frequency: z.enum(["weekly", "monthly"]),
   nextRunAt: z.string().min(8).max(10),
+  splitType: z.enum(["equal", "exact", "percentage", "shares"]).optional(),
+  splits: z
+    .array(
+      z.object({
+        roommateId: z.string().uuid(),
+        owedAmount: z.number().nonnegative(),
+        percentage: z.number().nullable(),
+        shares: z.number().nullable(),
+      })
+    )
+    .optional(),
 });
 
 export async function GET(request: Request) {
@@ -22,7 +33,11 @@ export async function POST(request: Request) {
   return handle(request, async () => {
     await requireSession(request);
     const input = await readJson(request, schema);
-    await createRecurringExpense(input);
+    await createRecurringExpense({
+      ...input,
+      splitType: input.splitType ?? "equal",
+      splits: input.splits ?? [],
+    });
     return jsonOk({ ok: true });
   });
 }

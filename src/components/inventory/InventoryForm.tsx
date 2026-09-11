@@ -34,6 +34,9 @@ export function InventoryForm({
   onSubmit: (values: InventoryInput) => Promise<void>;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const [ownershipType, setOwnershipType] = useState<"shared" | "personal">(
+    initial?.ownership_type ?? "shared"
+  );
   const defaults = useMemo(
     () => ({
       name: initial?.name ?? "",
@@ -60,10 +63,7 @@ export function InventoryForm({
       category: formData.get("category"),
       storage_location: formData.get("storage_location"),
       ownership_type: formData.get("ownership_type"),
-      owner_id:
-        formData.get("ownership_type") === "personal"
-          ? formData.get("owner_id") || currentRoommateId
-          : null,
+      owner_id: formData.get("owner_id") || currentRoommateId,
       expiry_date: String(formData.get("expiry_date") || "") || null,
       minimum_quantity:
         String(formData.get("minimum_quantity") || "") === ""
@@ -187,7 +187,8 @@ export function InventoryForm({
         <select
           id="ownership_type"
           name="ownership_type"
-          defaultValue={defaults.ownership_type}
+          value={ownershipType}
+          onChange={(event) => setOwnershipType(event.target.value as "shared" | "personal")}
           className="min-h-12 rounded-lg border border-input bg-transparent px-3 text-base"
         >
           <option value="shared">Shared</option>
@@ -196,7 +197,7 @@ export function InventoryForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="owner_id">Owner</Label>
+        <Label htmlFor="owner_id">{ownershipType === "shared" ? "Who bought it" : "Owner"}</Label>
         <select
           id="owner_id"
           name="owner_id"
@@ -209,8 +210,10 @@ export function InventoryForm({
             </option>
           ))}
         </select>
-        <p className="text-xs text-muted-foreground">
-          Used for personal items. Shared food can still show who bought it later.
+        <p className="text-xs text-foreground/80">
+          {ownershipType === "shared"
+            ? "Shared food can still remember who brought it home."
+            : "Personal items belong to this person."}
         </p>
       </div>
 

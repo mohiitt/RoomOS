@@ -1,14 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PushSettings } from "@/components/pwa/PushSettings";
 import { UserAvatar } from "@/components/shared/UserAvatar";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { lockThisPhone, useRoommate } from "@/contexts/CurrentRoommateContext";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export default function SettingsPage() {
   const { roommate, switchRoommate } = useRoommate();
+  const [confirmSwitch, setConfirmSwitch] = useState(false);
 
   return (
     <div>
@@ -19,7 +22,7 @@ export default function SettingsPage() {
             <UserAvatar name={roommate.name} size="lg" />
             <div>
               <p className="text-lg font-semibold">{roommate.name}</p>
-              <p className="text-sm text-muted-foreground">Signed in on this browser</p>
+              <p className="text-sm text-foreground/80">Signed in on this browser</p>
             </div>
           </div>
           <Button
@@ -27,7 +30,7 @@ export default function SettingsPage() {
             variant="outline"
             size="lg"
             className="mt-5 min-h-11 w-full"
-            onClick={switchRoommate}
+            onClick={() => setConfirmSwitch(true)}
           >
             Switch roommate
           </Button>
@@ -53,6 +56,14 @@ export default function SettingsPage() {
           <PushSettings />
         </div>
       </div>
+      <ConfirmDialog
+        open={confirmSwitch}
+        title="Switch roommate?"
+        description="You'll need the apartment PIN again. Anything logged after that, including money, is recorded as the new name."
+        confirmLabel="Switch"
+        onOpenChange={setConfirmSwitch}
+        onConfirm={() => switchRoommate()}
+      />
     </div>
   );
 }

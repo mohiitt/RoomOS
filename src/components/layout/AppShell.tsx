@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { PinScreen } from "@/components/auth/PinScreen";
 import { RoommateSelector } from "@/components/auth/RoommateSelector";
+import { Burst } from "@/components/dashboard/Burst";
 import { PwaRoot } from "@/components/pwa/PwaRoot";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="mx-auto min-h-dvh w-full max-w-md pb-24">
+      <Burst />
       <PwaRoot />
       <div className="px-4 pt-6">{children}</div>
       <BottomNavigation />

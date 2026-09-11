@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { FloatingActionButton } from "@/components/layout/FloatingActionButton";
 import { BalanceCard } from "@/components/money/BalanceCard";
@@ -15,6 +16,7 @@ import {
   generateDueRecurringExpenses,
   listBalances,
   listExpensePage,
+  nudgeRoommate,
 } from "@/lib/expenses/queries.ts";
 import { moneyViewFromNets } from "@/lib/expenses/view.ts";
 import { useRealtimeExpenses } from "@/hooks/useRealtime.ts";
@@ -139,9 +141,26 @@ export default function MoneyPage() {
                 {view.debts
                   .filter((debt) => debt.toId === roommate.id)
                   .map((debt) => (
-                    <li key={`${debt.fromId}-${debt.toId}`} className="flex justify-between text-base">
+                    <li key={`${debt.fromId}-${debt.toId}`} className="flex items-center justify-between gap-3 text-base">
                       <span>{nameFor(debt.fromId)}</span>
-                      <span className="font-medium">{formatMoney(debt.amount)}</span>
+                      <span className="flex items-center gap-3">
+                        <span className="font-medium">{formatMoney(debt.amount)}</span>
+                        <button
+                          type="button"
+                          className="text-sm font-medium text-primary"
+                          onClick={() =>
+                            void nudgeRoommate(debt.fromId)
+                              .then(() => toast.success(`Nudge sent to ${nameFor(debt.fromId)}`))
+                              .catch((nudgeError: unknown) =>
+                                toast.error(
+                                  nudgeError instanceof Error ? nudgeError.message : "Could not nudge"
+                                )
+                              )
+                          }
+                        >
+                          Nudge
+                        </button>
+                      </span>
                     </li>
                   ))}
               </ul>
@@ -161,6 +180,18 @@ export default function MoneyPage() {
             >
               Recurring
             </Link>
+            <Link
+              href="/money/summary"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-medium"
+            >
+              Spend summary
+            </Link>
+            <a
+              href="/api/money/export"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-medium"
+            >
+              Export CSV
+            </a>
           </div>
 
           <h2 className="pt-2 text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">

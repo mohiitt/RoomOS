@@ -12,6 +12,7 @@ import {
   getExpense,
   listSplitsForExpense,
   saveExpense,
+  uploadExpensePhoto,
 } from "@/lib/expenses/queries.ts";
 import { calculateSplits } from "@/lib/expenses/validateSplit.ts";
 import type { Expense, ExpenseSplit } from "@/types/database";
@@ -62,6 +63,9 @@ export default function EditExpensePage() {
         createdBy: roommate.id,
         splits: nextSplits,
       });
+      if (values.receipt) {
+        await uploadExpensePhoto(expense.id, values.receipt);
+      }
       toast.success("Expense updated");
       router.push(`/money/expense/${expense.id}`);
     } finally {

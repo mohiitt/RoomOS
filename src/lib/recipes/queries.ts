@@ -22,6 +22,18 @@ export async function createRecipe(input: {
   });
 }
 
+export async function updateRecipe(input: {
+  id: string;
+  name: string;
+  instructions: string;
+  ingredients: readonly RecipeIngredientInput[];
+}): Promise<RecipeWithIngredients> {
+  return apiJson<RecipeWithIngredients>(`/api/recipes/${input.id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
 export async function deleteRecipe(id: string): Promise<void> {
   await apiJson(`/api/recipes/${id}`, { method: "DELETE" });
 }

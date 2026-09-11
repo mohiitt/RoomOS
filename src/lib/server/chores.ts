@@ -159,6 +159,72 @@ export async function createChore(input: {
   return String(id);
 }
 
+export async function updateChore(input: {
+  id: string;
+  name: string;
+  description: string | null;
+  points?: number;
+  frequency?: ChoreFrequency;
+  roommateIds: string[];
+}): Promise<void> {
+  if (input.roommateIds.length < 1) {
+    throw new Error("Choose at least one roommate for the rotation");
+  }
+  const { error } = await getAdminInsforge().database.rpc("update_chore_with_rotation", {
+    p_id: input.id,
+    p_name: input.name,
+    p_description: input.description,
+    p_points: input.points ?? 10,
+    p_frequency: input.frequency ?? "weekly",
+    p_roommate_ids: input.roommateIds,
+  });
+  if (error) throw new Error(describeError(error, "Could not update chore"));
+}
+
+function mapSwap(row: Raw): import("@/types/database").ChoreSwapRequest {
+  const status = String(row.status);
+  return {
+    id: String(row.id),
+    assignment_id: String(row.assignment_id),
+    from_roommate_id: String(row.from_roommate_id),
+    to_roommate_id: String(row.to_roommate_id),
+    status:
+      status === "accepted" || status === "declined" || status === "cancelled"
+        ? status
+        : "pending",
+    created_at: String(row.created_at),
+  };
+}
+
+export async function listPendingSwaps(): Promise<import("@/types/database").ChoreSwapRequest[]> {
+  const { data, error } = await getAdminInsforge()
+    .database.from("chore_swap_requests")
+    .select("id, assignment_id, from_roommate_id, to_roommate_id, status, created_at")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw new Error(describeError(error, "Could not load swaps"));
+  return ((data ?? []) as Raw[]).map(mapSwap);
+}
+
+export async function requestChoreSwap(assignmentId: string, fromId: string, toId: string) {
+  const { error } = await getAdminInsforge().database.rpc("request_chore_swap", {
+    p_assignment_id: assignmentId,
+    p_from: fromId,
+    p_to: toId,
+  });
+  if (error) throw new Error(describeError(error, "Could not request a swap"));
+}
+
+export async function respondChoreSwap(id: string, actorId: string, accept: boolean) {
+  const { error } = await getAdminInsforge().database.rpc("respond_chore_swap", {
+    p_id: id,
+    p_actor: actorId,
+    p_accept: accept,
+  });
+  if (error) throw new Error(describeError(error, "Could not answer that swap"));
+}
+
 export async function seedDefaultChores(
   createdBy: string,
   roommateIds: string[]

@@ -22,6 +22,7 @@ export default function NewChorePage() {
         name: values.name,
         description: values.description,
         points: values.points,
+        frequency: values.frequency,
         createdBy: roommate.id,
         roommateIds: values.roommateIds,
       });
@@ -36,7 +37,7 @@ export default function NewChorePage() {
 
   return (
     <div>
-      <PageHeader title="Add chore" subtitle="It will rotate weekly among the people you pick." backHref="/chores" />
+      <PageHeader title="Add chore" subtitle="Weekly or monthly. It rotates among the people you pick." backHref="/chores" />
       {roommate ? (
         <ChoreForm
           roommates={roommates}

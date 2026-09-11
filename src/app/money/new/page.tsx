@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ExpenseForm } from "@/components/money/ExpenseForm";
 import type { ExpenseFormValues } from "@/components/money/ExpenseForm";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
-import { saveExpense } from "@/lib/expenses/queries.ts";
+import { saveExpense, uploadExpensePhoto } from "@/lib/expenses/queries.ts";
 import { calculateSplits } from "@/lib/expenses/validateSplit.ts";
 
 export default function NewExpensePage() {
@@ -29,7 +29,7 @@ export default function NewExpensePage() {
           shares: values.shares[roommateId],
         })),
       });
-      await saveExpense({
+      const id = await saveExpense({
         title: values.title,
         description: values.description,
         amount: values.amount,
@@ -40,6 +40,9 @@ export default function NewExpensePage() {
         createdBy: roommate.id,
         splits,
       });
+      if (values.receipt) {
+        await uploadExpensePhoto(id, values.receipt);
+      }
       toast.success("Expense added");
       router.push("/money");
     } finally {

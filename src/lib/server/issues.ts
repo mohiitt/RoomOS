@@ -154,9 +154,18 @@ export async function updateConcern(
     status?: ConcernStatus;
     assignedTo?: string | null;
     priority?: ConcernPriority;
+    title?: string;
     actorId: string;
   }
 ): Promise<Concern> {
+  if (patch.title?.trim()) {
+    const { error: titleError } = await getAdminInsforge()
+      .database.from("concerns")
+      .update({ title: patch.title.trim() })
+      .eq("id", id);
+    if (titleError) throw new Error(describeError(titleError, "Could not rename issue"));
+  }
+
   const { data, error } = await getAdminInsforge().database.rpc("update_concern", {
     p_id: id,
     p_status: patch.status ?? null,

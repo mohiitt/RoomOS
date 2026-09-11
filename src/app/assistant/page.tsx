@@ -1,14 +1,6 @@
-import { PageHeader } from "@/components/layout/PageHeader";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { redirect } from "next/navigation";
 
+// Intentionally unused: the AI assistant is out of scope. Keep the route so old links don't 404.
 export default function AssistantPage() {
-  return (
-    <div>
-      <PageHeader title="Assistant" subtitle="Ask about the apartment in plain language." />
-      <EmptyState
-        title="Not yet."
-        description="The assistant waits until balances, food, chores, and issues are real data."
-      />
-    </div>
-  );
+  redirect("/");
 }

@@ -22,7 +22,6 @@ import {
   fetchSession,
   listRoommates,
   lockSession,
-  switchSessionRoommate,
 } from "@/lib/roommates/queries";
 import { rebindPushSubscription } from "@/lib/push/browser";
 
@@ -111,6 +110,7 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
     setApartmentAccess(true);
     setRoommate(current);
     setStatus("ready");
+    void rebindPushSubscription();
   }, [roommates]);
 
   const selectRoommate = useCallback(
@@ -120,18 +120,6 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
       setStoredRoommateId(current.id);
       setRoommate(current);
       setStatus("pin");
-      void (async () => {
-        try {
-          const session = await fetchSession();
-          if (session.unlocked) {
-            await switchSessionRoommate(current.id);
-            await rebindPushSubscription();
-            setStatus("ready");
-          }
-        } catch {
-          setStatus("pin");
-        }
-      })();
     },
     [roommates]
   );
@@ -140,6 +128,7 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
     setStoredRoommateId(null);
     setRoommate(null);
     setStatus("select");
+    void lockSession();
   }, []);
 
   const value = useMemo(

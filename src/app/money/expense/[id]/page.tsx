@@ -16,9 +16,11 @@ import { formatMoney } from "@/lib/expenses/money.ts";
 import {
   deleteExpense,
   getExpense,
+  listExpensePhotos,
   listSplitsForExpense,
+  uploadExpensePhoto,
 } from "@/lib/expenses/queries.ts";
-import type { Expense, ExpenseSplit } from "@/types/database";
+import type { Expense, ExpenseAttachment, ExpenseSplit } from "@/types/database";
 import { useRealtimeExpenses } from "@/hooks/useRealtime.ts";
 
 export default function ExpenseDetailPage() {
@@ -27,15 +29,21 @@ export default function ExpenseDetailPage() {
   const { roommate, roommates } = useRoommate();
   const [expense, setExpense] = useState<Expense | null>(null);
   const [splits, setSplits] = useState<ExpenseSplit[]>([]);
+  const [photos, setPhotos] = useState<ExpenseAttachment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
-    void Promise.all([getExpense(params.id), listSplitsForExpense(params.id)])
-      .then(([nextExpense, nextSplits]) => {
+    void Promise.all([
+      getExpense(params.id),
+      listSplitsForExpense(params.id),
+      listExpensePhotos(params.id),
+    ])
+      .then(([nextExpense, nextSplits, nextPhotos]) => {
         setExpense(nextExpense);
         setSplits(nextSplits);
+        setPhotos(nextPhotos);
       })
       .catch((loadError: unknown) => {
         setError(loadError instanceof Error ? loadError.message : "Could not load expense");
@@ -77,6 +85,14 @@ export default function ExpenseDetailPage() {
           <StatusBadge>{expense.split_type}</StatusBadge>
         </div>
         {expense.description ? <p className="mt-3 text-sm">{expense.description}</p> : null}
+        <p className="mt-3 text-xs text-foreground/80">
+          Logged {formatShortDate(expense.created_at.slice(0, 10))}
+          {expense.created_by && expense.created_by !== expense.paid_by
+            ? " · receipt/photo evidence lives below"
+            : photos.length > 0
+              ? " · receipt attached"
+              : " · no receipt attached"}
+        </p>
         {yourShare ? (
           <p className="mt-3 text-sm text-muted-foreground">
             Your share: {formatMoney(yourShare.owed_amount)}
@@ -102,6 +118,55 @@ export default function ExpenseDetailPage() {
             );
           })}
         </ul>
+      </section>
+
+      <section className="mt-5">
+        <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+          Receipt
+        </h2>
+        {photos.length === 0 ? (
+          <p className="mt-3 text-sm text-foreground/80">No receipt yet.</p>
+        ) : (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {photos.map((photo) => (
+              <a
+                key={photo.id}
+                href={`/api/money/expenses/${expense.id}/photos/${photo.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="overflow-hidden rounded-2xl ring-1 ring-border"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/money/expenses/${expense.id}/photos/${photo.id}`}
+                  alt=""
+                  className="aspect-square w-full object-cover"
+                />
+              </a>
+            ))}
+          </div>
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          className="mt-3 min-h-12 w-full text-sm"
+          disabled={busy}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (!file || !roommate) return;
+            setBusy(true);
+            void uploadExpensePhoto(expense.id, file)
+              .then((saved) => {
+                setPhotos((current) => [...current, saved]);
+                toast.success("Receipt added");
+              })
+              .catch((uploadError: unknown) => {
+                toast.error(uploadError instanceof Error ? uploadError.message : "Could not upload");
+              })
+              .finally(() => setBusy(false));
+          }}
+        />
       </section>
 
       <div className="mt-5 flex gap-3">

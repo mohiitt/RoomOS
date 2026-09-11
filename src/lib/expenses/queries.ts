@@ -1,6 +1,7 @@
 import { apiJson } from "@/lib/api/browser";
 import type {
   Expense,
+  ExpenseAttachment,
   ExpenseSplit,
   RecurringExpense,
   Settlement,
@@ -103,17 +104,12 @@ export async function createRecurringExpense(input: {
   category: string | null;
   frequency: "weekly" | "monthly";
   nextRunAt: string;
+  splitType?: SplitType;
+  splits?: SplitResult[];
 }): Promise<void> {
   await apiJson("/api/money/recurring", {
     method: "POST",
     body: JSON.stringify(input),
-  });
-}
-
-export async function setRecurringActive(id: string, isActive: boolean): Promise<void> {
-  await apiJson(`/api/money/recurring/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ isActive }),
   });
 }
 
@@ -122,4 +118,40 @@ export async function generateDueRecurringExpenses(): Promise<number> {
     method: "POST",
   });
   return payload.count;
+}
+
+export async function uploadExpensePhoto(expenseId: string, file: File): Promise<ExpenseAttachment> {
+  const body = new FormData();
+  body.append("file", file);
+  return apiJson<ExpenseAttachment>(`/api/money/expenses/${expenseId}/photos`, {
+    method: "POST",
+    body,
+  });
+}
+
+export async function listExpensePhotos(expenseId: string): Promise<ExpenseAttachment[]> {
+  return apiJson<ExpenseAttachment[]>(`/api/money/expenses/${expenseId}/photos`);
+}
+
+export async function nudgeRoommate(toRoommateId: string) {
+  await apiJson("/api/money/nudge", {
+    method: "POST",
+    body: JSON.stringify({ toRoommateId }),
+  });
+}
+
+export async function fetchSpendSummary() {
+  return apiJson<{
+    total: number;
+    count: number;
+    categories: { category: string; label: string; amount: number }[];
+    months: { month: string; amount: number }[];
+  }>("/api/money/summary");
+}
+
+export async function setRecurringActive(id: string, isActive: boolean): Promise<void> {
+  await apiJson(`/api/money/recurring/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ isActive }),
+  });
 }

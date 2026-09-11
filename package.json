@@ -11,9 +11,10 @@
     "dev:https": "next dev --experimental-https --port 3000",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-strip-types --test src/lib/expenses/expenses.test.ts src/lib/expenses/view.test.ts src/lib/chores/chores.test.ts src/lib/issues/issues.test.ts src/lib/dashboard/dashboard.test.ts src/lib/realtime/realtime.test.ts src/lib/notifications/notifications.test.ts src/lib/recipes/recipes.test.ts src/lib/copy.test.ts src/lib/auth/session.test.ts src/lib/auth/token.test.ts src/lib/server/origin.test.ts src/lib/server/page.test.ts",
+    "test": "node --experimental-strip-types --test src/lib/expenses/expenses.test.ts src/lib/expenses/view.test.ts src/lib/chores/chores.test.ts src/lib/issues/issues.test.ts src/lib/dashboard/dashboard.test.ts src/lib/dashboard/vibe.test.ts src/lib/realtime/realtime.test.ts src/lib/notifications/notifications.test.ts src/lib/recipes/recipes.test.ts src/lib/copy.test.ts src/lib/auth/session.test.ts src/lib/auth/token.test.ts src/lib/server/origin.test.ts src/lib/server/page.test.ts",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

@@ -24,6 +24,7 @@ export type ExpenseFormValues = {
   exactAmounts: Record<string, number>;
   percentages: Record<string, number>;
   shares: Record<string, number>;
+  receipt: File | null;
 };
 
 export function ExpenseForm({
@@ -73,6 +74,7 @@ export function ExpenseForm({
     )
   );
   const [error, setError] = useState<string | null>(null);
+  const [receipt, setReceipt] = useState<File | null>(null);
 
   const preview = useMemo(() => {
     const numericAmount = Number(amount);
@@ -120,6 +122,7 @@ export function ExpenseForm({
           selected.map((id) => [id, Number(percentages[id] || 0)])
         ),
         shares: Object.fromEntries(selected.map((id) => [id, Number(shares[id] || 1)])),
+        receipt,
       };
       if (!values.title) throw new Error("Title is required");
       calculateSplits({
@@ -221,6 +224,7 @@ export function ExpenseForm({
 
       <fieldset className="grid gap-2">
         <legend className="text-sm font-medium">Split with</legend>
+        <p className="text-xs text-foreground/80">Filled = in the split. Outline = left out.</p>
         <div className="flex flex-wrap gap-2">
           {roommates.map((roommate) => {
             const active = selected.includes(roommate.id);
@@ -228,13 +232,15 @@ export function ExpenseForm({
               <button
                 key={roommate.id}
                 type="button"
+                aria-pressed={active}
                 onClick={() => toggleRoommate(roommate.id)}
-                className={`min-h-11 rounded-full px-3 text-sm font-medium ring-1 ${
+                className={`min-h-11 rounded-full px-3 text-sm font-medium ring-2 ${
                   active
                     ? "bg-primary text-primary-foreground ring-primary"
-                    : "bg-card text-foreground ring-border"
+                    : "bg-transparent text-foreground/70 ring-border line-through decoration-foreground/30"
                 }`}
               >
+                {active ? "✓ " : ""}
                 {roommate.name}
               </button>
             );
@@ -301,18 +307,39 @@ export function ExpenseForm({
       ) : null}
 
       {preview ? (
-        <ul className="rounded-3xl bg-secondary px-4 py-3 text-sm">
-          {preview.map((split) => {
-            const roommate = roommates.find((person) => person.id === split.roommateId);
-            return (
-              <li key={split.roommateId} className="flex justify-between py-1">
-                <span>{roommate?.name}</span>
-                <span>{formatMoney(split.owedAmount)}</span>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="rounded-3xl bg-secondary px-4 py-3">
+          <p className="text-sm font-medium">
+            {splitType === "equal" && preview.length > 0
+              ? `${formatMoney(preview[0].owedAmount)} each`
+              : "Each person before you save"}
+          </p>
+          <ul className="text-sm">
+            {preview.map((split) => {
+              const roommate = roommates.find((person) => person.id === split.roommateId);
+              return (
+                <li key={split.roommateId} className="flex justify-between py-1">
+                  <span>{roommate?.name}</span>
+                  <span>{formatMoney(split.owedAmount)}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : amount ? (
+        <p className="text-sm text-foreground/80">Add people to see each share before saving.</p>
       ) : null}
+
+      <div className="grid gap-2">
+        <Label htmlFor="expense-receipt">Receipt photo</Label>
+        <Input
+          id="expense-receipt"
+          className="min-h-12 pt-2 text-base"
+          type="file"
+          accept="image/*"
+          onChange={(event) => setReceipt(event.target.files?.[0] ?? null)}
+        />
+        <p className="text-xs text-foreground/80">Optional, but this is what you argue from later.</p>
+      </div>
 
       {error ? (
         <p className="text-sm text-destructive" role="alert">

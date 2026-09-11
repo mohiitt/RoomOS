@@ -43,3 +43,17 @@ export function filterInventoryItems(
     }
   });
 }
+
+export function sortInventoryForUseSoon(items: InventoryItem[]): InventoryItem[] {
+  const order = ["expired", "critical", "soon", "normal", "none"] as const;
+  return [...items].sort((a, b) => {
+    const aStatus = getExpiryStatus(a.expiry_date);
+    const bStatus = getExpiryStatus(b.expiry_date);
+    const byExpiry = order.indexOf(aStatus) - order.indexOf(bStatus);
+    if (byExpiry !== 0) return byExpiry;
+    const aLow = isLowStock(a.quantity, a.minimum_quantity) ? 0 : 1;
+    const bLow = isLowStock(b.quantity, b.minimum_quantity) ? 0 : 1;
+    if (aLow !== bLow) return aLow - bLow;
+    return a.name.localeCompare(b.name);
+  });
+}

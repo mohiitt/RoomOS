@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { fireBurst } from "@/components/dashboard/Burst";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,7 @@ export default function SettlePage() {
         note: note.trim() || null,
         createdBy: roommate.id,
       });
+      fireBurst();
       toast.success("Settlement recorded");
       router.push("/money");
     } catch (submitError) {
@@ -160,9 +162,23 @@ export default function SettlePage() {
             required
           />
           {suggested ? (
-            <p className="text-xs text-muted-foreground">
-              Suggested: {formatMoney(suggested.amount)}
+            <p className="text-sm text-foreground/80">
+              Full balance: {formatMoney(suggested.amount)}. You can pay part of it — the rest stays on the ledger.
             </p>
+          ) : (
+            <p className="text-sm text-foreground/80">
+              Partial payments are fine. Enter whatever actually moved.
+            </p>
+          )}
+          {suggested ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="justify-start px-0"
+              onClick={() => setAmount(String(suggested.amount))}
+            >
+              Pay in full
+            </Button>
           ) : null}
         </div>
         <div className="grid gap-2">

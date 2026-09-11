@@ -17,14 +17,20 @@ const emptyIngredient: RecipeIngredientInput = { name: "", quantity: "", unit: "
 
 export function RecipeForm({
   busy,
+  initial,
+  submitLabel = "Save recipe",
   onSubmit,
 }: {
   busy: boolean;
+  initial?: RecipeFormValues;
+  submitLabel?: string;
   onSubmit: (values: RecipeFormValues) => Promise<void>;
 }) {
-  const [name, setName] = useState("");
-  const [instructions, setInstructions] = useState("");
-  const [ingredients, setIngredients] = useState<RecipeIngredientInput[]>([{ ...emptyIngredient }]);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [instructions, setInstructions] = useState(initial?.instructions ?? "");
+  const [ingredients, setIngredients] = useState<RecipeIngredientInput[]>(
+    initial?.ingredients?.length ? initial.ingredients : [{ ...emptyIngredient }]
+  );
   const [error, setError] = useState<string | null>(null);
 
   function updateIngredient(index: number, patch: Partial<RecipeIngredientInput>) {
@@ -136,7 +142,7 @@ export function RecipeForm({
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <Button type="submit" size="lg" className="min-h-11" disabled={busy}>
-        Save recipe
+        {busy ? "Saving…" : submitLabel}
       </Button>
     </form>
   );

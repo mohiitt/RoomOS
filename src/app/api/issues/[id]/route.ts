@@ -6,6 +6,7 @@ const schema = z.object({
   status: z.enum(["open", "assigned", "in_progress", "resolved"]).optional(),
   assignedTo: z.string().uuid().nullable().optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+  title: z.string().trim().min(1).max(80).optional(),
 });
 
 export async function GET(

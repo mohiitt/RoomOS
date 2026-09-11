@@ -8,6 +8,7 @@ import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
@@ -44,6 +45,7 @@ export default function IssueDetailPage() {
   const [photos, setPhotos] = useState<ConcernAttachment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [titleDraft, setTitleDraft] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -55,6 +57,7 @@ export default function IssueDetailPage() {
         listAttachments(params.id),
       ]);
       setConcern(nextConcern);
+      setTitleDraft(nextConcern.title);
       setComments(nextComments);
       setPhotos(nextPhotos);
     } catch (loadError) {
@@ -88,6 +91,21 @@ export default function IssueDetailPage() {
       toast.success(assignedTo ? "Assigned" : "Unassigned");
     } catch (saveError) {
       toast.error(saveError instanceof Error ? saveError.message : "Could not assign");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onRename() {
+    if (!concern) return;
+    const trimmed = titleDraft.trim();
+    if (!trimmed || trimmed === concern.title) return;
+    setBusy(true);
+    try {
+      setConcern(await updateConcern(concern.id, { title: trimmed }));
+      toast.success("Title updated");
+    } catch (saveError) {
+      toast.error(saveError instanceof Error ? saveError.message : "Could not rename");
     } finally {
       setBusy(false);
     }
@@ -159,7 +177,28 @@ export default function IssueDetailPage() {
       />
 
       <section className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border">
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2">
+          <Label htmlFor="issue-title">Title</Label>
+          <Input
+            id="issue-title"
+            className="min-h-12 text-base"
+            value={titleDraft}
+            onChange={(event) => setTitleDraft(event.target.value)}
+          />
+          {titleDraft.trim() && titleDraft.trim() !== concern.title ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="min-h-11"
+              disabled={busy}
+              onClick={() => void onRename()}
+            >
+              Save title
+            </Button>
+          ) : null}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
           <StatusBadge tone={priorityTone(concern.priority)}>
             {labelForPriority(concern.priority)}
           </StatusBadge>

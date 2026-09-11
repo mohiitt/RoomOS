@@ -27,6 +27,7 @@ export function statusAfterVerifiedPin(
   return knownRoommateId(storedRoommateId, roommateIds) ? "ready" : "select";
 }
 
-export function statusAfterSelectingRoommate(hasAccess: boolean): "ready" | "pin" {
-  return hasAccess ? "ready" : "pin";
+export function statusAfterSelectingRoommate(_hasAccess: boolean): "ready" | "pin" {
+  void _hasAccess;
+  return "pin";
 }
