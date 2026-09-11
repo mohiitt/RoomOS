@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -89,9 +90,11 @@ function InventoryPageContent() {
 
       {tab === "recipes" ? (
         <>
-          <img
+          <Image
             src="/recipe-still.png"
             alt=""
+            width={640}
+            height={224}
             className="mb-4 h-28 w-full rounded-3xl object-cover"
           />
           <RecipesList />

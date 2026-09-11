@@ -49,6 +49,24 @@ export async function subscribeThisDevice(roommateId: string) {
   if (!response.ok) throw new Error(payload?.error || "Could not enable alerts");
 }
 
+export async function rebindPushSubscription() {
+  if (!pushSupported()) return;
+  const registration = await navigator.serviceWorker.getRegistration("/");
+  const subscription = await registration?.pushManager.getSubscription();
+  if (!subscription) return;
+  const serialized = subscription.toJSON();
+  if (!serialized.endpoint || !serialized.keys?.p256dh || !serialized.keys?.auth) return;
+  await fetch("/api/push/subscribe", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      endpoint: serialized.endpoint,
+      keys: serialized.keys,
+    }),
+  }).catch(() => undefined);
+}
+
 export async function unsubscribeThisDevice() {
   const registration = await navigator.serviceWorker.ready;
   const subscription = await registration.pushManager.getSubscription();

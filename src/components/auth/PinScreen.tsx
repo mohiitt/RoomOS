@@ -1,6 +1,7 @@
 "use client";
 
 import { Delete, Loader2Icon } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { copy, pinHey, wrongPinLine } from "@/lib/copy";
 
@@ -51,10 +52,13 @@ export function PinScreen({
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-10">
       <div className="w-full max-w-sm">
-        <img
+        <Image
           src="/landing-kitchen.png"
           alt=""
+          width={640}
+          height={320}
           className="h-40 w-full rounded-3xl object-cover"
+          priority
         />
         <p className="mt-6 text-sm font-medium tracking-[0.2em] text-primary uppercase">
           {copy.landingKicker}
@@ -73,7 +77,11 @@ export function PinScreen({
           </button>
         ) : null}
 
-        <div className="mt-10 flex justify-center gap-3" aria-label="PIN digits">
+        <div
+          className="mt-10 flex justify-center gap-3"
+          aria-label="PIN digits entered"
+          aria-live="polite"
+        >
           {Array.from({ length: 4 }).map((_, index) => (
             <span
               key={index}

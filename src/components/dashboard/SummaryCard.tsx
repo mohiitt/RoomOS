@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export function SummaryCard({
@@ -24,7 +25,14 @@ export function SummaryCard({
     >
       {imageSrc ? (
         <>
-          <img src={imageSrc} alt="" className="absolute inset-0 size-full object-cover" />
+          <Image
+            src={imageSrc}
+            alt=""
+            fill
+            sizes="(max-width: 448px) 100vw, 448px"
+            className="object-cover"
+            priority={false}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
         </>
       ) : null}

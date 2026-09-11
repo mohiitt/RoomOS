@@ -36,7 +36,7 @@ export default function NewChorePage() {
 
   return (
     <div>
-      <PageHeader title="Add chore" subtitle="It will rotate weekly among the people you pick." />
+      <PageHeader title="Add chore" subtitle="It will rotate weekly among the people you pick." backHref="/chores" />
       {roommate ? (
         <ChoreForm
           roommates={roommates}

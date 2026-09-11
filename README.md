@@ -17,7 +17,7 @@
 
 ---
 
-RoomOS is a **mobile-first** web app for one apartment — Mohit, Urmi, Jainil, Rahul, and Aditi.
+RoomOS is a **mobile-first** web app for one apartment — Mohit, Sarvesh, Atharva M, Atharva B, and Prathamesh.
 
 It replaces the group chat, the sticky notes, and the Splitwise tab with one quiet screen:
 
@@ -50,23 +50,22 @@ Later phases in the plan: an AI roommate assistant.
          Money     Food     Chores   Shopping   Issues
 ```
 
-- Identity lives in the browser after PIN. There are no logins, emails, or passwords.
-- Postgres on [InsForge](https://insforge.app) is the source of truth. Migrations live in `migrations/`.
-- Open screens subscribe to apartment changes so another roommate's save shows up without a refresh.
+- A signed HttpOnly cookie is the source of apartment access. The browser talks only to same-origin `/api` routes; InsForge admin credentials stay on the server.
+- Open screens subscribe to apartment change *metadata* so another roommate's save triggers a refetch.
 - In-app notifications cover new expenses, low or expiring food, chores, and issues. The bell on Home shows unread count.
 - Install RoomOS on the phone home screen, then allow phone alerts in Settings. iPhone needs Safari → Share → Add to Home Screen, then open from that icon.
 - Expense splits are calculated in **cents** so $10 split three ways always equals $10.
 - Chores rotate weekly among active roommates. Completing early can award a small bonus.
-- Issue photos go in a public `concern-photos` bucket so everyone in the apartment can see them.
+- Issue photos upload through the server. The `concern-photos` bucket is private.
 
 ## Stack
 
 | Layer | Choice |
 | :--- | :--- |
 | App | Next.js 16, React 19 |
-| UI | Tailwind 4, shadcn, Fraunces + Nunito Sans |
-| Backend | InsForge Postgres + Storage |
-| Tests | Node's built-in test runner |
+| UI | Tailwind 4, shadcn, Poppins |
+| Backend | InsForge Postgres + Storage (admin client on the server) |
+| Tests | Node's built-in test runner (`npm test`), TypeScript (`npm run typecheck`) |
 
 ## Run it locally
 
@@ -85,7 +84,15 @@ Fill in `.env.local`:
 | `ROOMOS_PIN_HASH` | SHA-256 hex of the 4-digit apartment PIN |
 | `ROOMOS_SESSION_SECRET` | A long random string for the access cookie |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | Web Push keys (`npx web-push generate-vapid-keys`) |
-| `VAPID_MAILTO` | Contact used to sign push messages |
+| `PUSH_DISPATCH_SECRET` | Shared secret for the maintenance job / push dispatcher |
+
+Node 20.9+ and npm 10+ are required.
+
+The daily InsForge schedule (`roomos-daily-maintenance`) POSTs `/functions/dispatch-push` at 08:00 America/Los_Angeles (15:00 UTC during PDT). It generates recurring expenses, chores, time-based alerts, and retries pending web push. Add `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` as InsForge secrets so the job can send lock-screen alerts; without them the job still generates data and skips push.
+
+Backups: `npx -y @insforge/cli backups create --name <label>`. Restore overwrites the live database — only with explicit confirmation.
+
+Issue photos are private. The app serves them through `/api/issues/:id/photos/:photoId` after PIN unlock.
 
 Hash a PIN:
 
@@ -113,7 +120,9 @@ npm run build
 ```text
 src/app/            screens (home, money, food, chores, issues…)
 src/components/     mobile UI
-src/lib/            domain logic + InsForge queries
+src/app/api/        signed-session feature APIs
+src/lib/server/     database access (admin client)
+src/lib/            domain logic + browser API clients
 migrations/         Postgres schema
 ```
 

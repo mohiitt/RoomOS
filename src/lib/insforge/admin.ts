@@ -1,3 +1,4 @@
+import "server-only";
 import { createAdminClient } from "@insforge/sdk";
 
 let admin: ReturnType<typeof createAdminClient> | null = null;

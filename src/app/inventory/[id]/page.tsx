@@ -118,7 +118,7 @@ export default function InventoryItemPage() {
 
   return (
     <div className="pb-8">
-      <PageHeader title={item.name} subtitle={labelForCategory(item.category)} />
+      <PageHeader title={item.name} subtitle={labelForCategory(item.category)} backHref="/inventory" />
       <section className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border">
         <p className="font-heading text-4xl">{formatQuantity(item.quantity, item.unit)}</p>
         <div className="mt-4 flex flex-wrap gap-2">

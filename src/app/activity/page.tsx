@@ -32,7 +32,7 @@ export default function ActivityPage() {
 
   return (
     <div>
-      <PageHeader title="Activity" subtitle="A running log of apartment changes." />
+      <PageHeader title="Activity" subtitle="Latest apartment changes." backHref="/" />
       {events === null ? (
         <LoadingSkeleton />
       ) : error ? (

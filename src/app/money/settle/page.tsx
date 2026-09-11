@@ -14,11 +14,10 @@ import { formatShortDate } from "@/lib/dates";
 import { formatMoney } from "@/lib/expenses/money.ts";
 import {
   createSettlement,
-  listExpenses,
-  listSettlements,
-  listSplits,
+  listBalances,
+  listSettlementPage,
 } from "@/lib/expenses/queries.ts";
-import { buildMoneyView } from "@/lib/expenses/view.ts";
+import { moneyViewFromNets } from "@/lib/expenses/view.ts";
 import { useRealtimeExpenses } from "@/hooks/useRealtime.ts";
 import type { Settlement } from "@/types/database";
 
@@ -41,20 +40,19 @@ export default function SettlePage() {
   const refresh = useCallback(
     async (seedForm = false) => {
       try {
-        const [expenses, splits, nextSettlements] = await Promise.all([
-          listExpenses(),
-          listSplits(),
-          listSettlements(),
+        const [nextNets, page] = await Promise.all([
+          listBalances(),
+          listSettlementPage(0, 20),
         ]);
-        const view = buildMoneyView({
-          roommateIds: roommates.map((person) => person.id),
-          viewerId: roommate?.id ?? "",
-          expenses,
-          splits,
-          settlements: nextSettlements,
-        });
+        const view = moneyViewFromNets(
+          roommates.map((person) => ({
+            roommateId: person.id,
+            net: nextNets.find((row) => row.roommateId === person.id)?.net ?? 0,
+          })),
+          roommate?.id ?? ""
+        );
         setDebts(view.debts);
-        setSettlements(nextSettlements);
+        setSettlements(page.items);
         if (seedForm) {
           const firstOwed = view.debts.find((debt) => debt.fromId === roommate?.id);
           if (firstOwed) {
@@ -112,7 +110,7 @@ export default function SettlePage() {
 
   return (
     <div>
-      <PageHeader title="Settle up" subtitle="Record a payment between roommates." />
+      <PageHeader title="Settle up" subtitle="Record a payment between roommates." backHref="/money" />
       {error ? <p className="mb-4 text-sm text-destructive">{error}</p> : null}
       <form onSubmit={(event) => void onSubmit(event)} className="grid gap-4">
         <div className="grid gap-2">

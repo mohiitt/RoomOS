@@ -53,7 +53,7 @@ export default function NewIssuePage() {
 
   return (
     <div>
-      <PageHeader title="Report issue" subtitle="Write it down so it does not live only in the group chat." />
+      <PageHeader title="Report issue" subtitle="Write it down so it does not live only in the group chat." backHref="/issues" />
       {roommate ? (
         <IssueForm
           roommates={roommates}

@@ -71,11 +71,9 @@ export default function ChoresPage() {
     [templates]
   );
 
-  const thisWeek = assignments.filter((assignment) => assignment.due_date === dueDate);
-  const yours = thisWeek.filter(
-    (assignment) => assignment.assigned_to === roommate?.id && assignment.status === "pending"
-  );
-  const restOfWeek = thisWeek.filter(
+  const current = assignments.filter((assignment) => assignment.status === "pending");
+  const yours = current.filter((assignment) => assignment.assigned_to === roommate?.id);
+  const restOfWeek = current.filter(
     (assignment) => !yours.some((row) => row.id === assignment.id)
   );
   const history = assignments.filter((assignment) => assignment.status !== "pending").slice(0, 12);
@@ -205,7 +203,7 @@ export default function ChoresPage() {
             </section>
           ) : null}
 
-          {thisWeek.length === 0 ? (
+          {current.length === 0 ? (
             <section>
               <EmptyState
                 title="Nothing assigned."

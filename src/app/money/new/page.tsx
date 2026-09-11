@@ -49,7 +49,7 @@ export default function NewExpensePage() {
 
   return (
     <div>
-      <PageHeader title="Add expense" subtitle="Split it while the receipt is still around." />
+      <PageHeader title="Add expense" subtitle="Split it while the receipt is still around." backHref="/money" />
       {roommate ? (
         <ExpenseForm
           roommates={roommates}

@@ -74,7 +74,7 @@ export default function EditExpensePage() {
 
   return (
     <div>
-      <PageHeader title="Edit expense" subtitle={expense.title} />
+      <PageHeader title="Edit expense" subtitle={expense.title} backHref={`/money/expense/${expense.id}`} />
       <ExpenseForm
         roommates={roommates}
         currentRoommateId={roommate.id}

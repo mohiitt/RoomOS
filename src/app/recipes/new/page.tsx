@@ -42,7 +42,7 @@ export default function NewRecipePage() {
       >
         Back to recipes
       </Link>
-      <PageHeader title="New recipe" subtitle="Name, ingredients, and how to cook it." />
+      <PageHeader title="New recipe" subtitle="Name, ingredients, and how to cook it." backHref="/inventory?tab=recipes" />
       {roommate ? <RecipeForm busy={busy} onSubmit={onSubmit} /> : null}
     </div>
   );

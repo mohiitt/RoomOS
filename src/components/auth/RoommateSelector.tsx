@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { copy } from "@/lib/copy";
 import type { Roommate } from "@/types/database";
@@ -14,10 +15,13 @@ export function RoommateSelector({
   return (
     <div className="flex min-h-dvh flex-col px-5 py-8">
       <div className="mx-auto w-full max-w-md">
-        <img
+        <Image
           src="/landing-kitchen.png"
           alt=""
+          width={640}
+          height={448}
           className="h-56 w-full rounded-3xl object-cover"
+          priority
         />
         <p className="mt-6 text-sm font-medium tracking-[0.2em] text-primary uppercase">
           {copy.landingKicker}

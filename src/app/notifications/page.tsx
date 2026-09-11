@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import { useRealtimeNotifications } from "@/hooks/useRealtime.ts";
 import {
-  listNotifications,
+  listNotificationPage,
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/lib/notifications/queries.ts";
@@ -22,10 +22,16 @@ export default function NotificationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const load = useCallback(() => {
     if (!roommate) return;
-    void listNotifications(roommate.id)
-      .then(setItems)
+    void listNotificationPage(0, 40)
+      .then((page) => {
+        setItems(page.items);
+        setHasMore(page.hasMore);
+      })
       .catch((loadError: unknown) => {
         setError(loadError instanceof Error ? loadError.message : "Could not load notifications");
         setItems([]);
@@ -72,6 +78,7 @@ export default function NotificationsPage() {
       <PageHeader
         title="Notifications"
         subtitle="What changed while you were out."
+        backHref="/"
         action={
           unread > 0 ? (
             <Button
@@ -105,6 +112,32 @@ export default function NotificationsPage() {
           ))}
         </ul>
       )}
+      {items && items.length > 0 && hasMore ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="mt-4 min-h-11 w-full"
+          disabled={loadingMore}
+          onClick={() => {
+            if (!items) return;
+            setLoadingMore(true);
+            void listNotificationPage(items.length, 40)
+              .then((page) => {
+                setItems((current) => [...(current ?? []), ...page.items]);
+                setHasMore(page.hasMore);
+              })
+              .catch((loadError: unknown) => {
+                toast.error(
+                  loadError instanceof Error ? loadError.message : "Could not load more"
+                );
+              })
+              .finally(() => setLoadingMore(false));
+          }}
+        >
+          {loadingMore ? "Loading…" : "Load more"}
+        </Button>
+      ) : null}
     </div>
   );
 }

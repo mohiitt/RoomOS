@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  concernStatusAllowed,
   isOpenStatus,
   statusOnAssign,
   statusTone,
@@ -18,6 +19,12 @@ test("clearing the assignee on an assigned issue returns it to open", () => {
 test("in-progress and resolved issues keep their status when assignee changes", () => {
   assert.equal(statusOnAssign("in_progress", "urmi"), "in_progress");
   assert.equal(statusOnAssign("resolved", null), "resolved");
+});
+
+test("resolved can reopen but cannot jump to in progress", () => {
+  assert.equal(concernStatusAllowed("resolved", "open"), true);
+  assert.equal(concernStatusAllowed("resolved", "in_progress"), false);
+  assert.equal(concernStatusAllowed("open", "in_progress"), true);
 });
 
 test("resolved is the only closed status", () => {

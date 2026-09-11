@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityRow } from "@/components/dashboard/ActivityRow";
 import { SummaryCard } from "@/components/dashboard/SummaryCard";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -19,14 +20,20 @@ export default function HomePage() {
   const { roommate, roommates } = useRoommate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const loadId = useRef(0);
 
   const load = useCallback(() => {
     if (!roommate) return;
+    const requestId = ++loadId.current;
     void getDashboardData({ viewerId: roommate.id, roommates })
-      .then(setData)
+      .then((next) => {
+        if (requestId !== loadId.current) return;
+        setError(null);
+        setData(next);
+      })
       .catch((loadError: unknown) => {
+        if (requestId !== loadId.current) return;
         setError(loadError instanceof Error ? loadError.message : "Could not load home");
-        setData(null);
       });
   }, [roommate, roommates]);
 
@@ -59,23 +66,59 @@ export default function HomePage() {
               href="/money"
               label="Balance"
               title={data.moneyLabel}
-              detail={balanceAside(data.moneyNet)}
+              detail={data.errors.money ?? balanceAside(data.moneyNet)}
             />
             <SummaryCard
               href="/inventory"
               label="Food"
               title={data.foodLabel}
-              detail={foodAside(data.expiringItems.length)}
+              detail={data.errors.inventory ?? foodAside(data.expiringItems.length)}
               imageSrc="/food-bowl.png"
+            />
+            <SummaryCard
+              href="/shopping"
+              label="Shopping"
+              title={data.shoppingLabel}
+              detail={data.errors.shopping ?? `${data.shoppingCount} on the list`}
+            />
+            <SummaryCard
+              href="/chores"
+              label="Chores"
+              title={data.choreLabel}
+              detail={data.errors.chores ?? (data.yourChores[0]?.template?.name ?? "This week's rotation")}
+            />
+            <SummaryCard
+              href="/issues"
+              label="Issues"
+              title={data.issueLabel}
+              detail={data.errors.issues ?? (data.yourIssues[0]?.title ?? "Nothing assigned to you")}
             />
             <SummaryCard
               href="/money"
               label="Money"
               title={data.latestExpenseLabel}
-              detail={copy.moneyAside}
+              detail={data.errors.money ?? copy.moneyAside}
               imageSrc="/cash-split.png"
             />
           </div>
+
+          {data.attention.length > 0 ? (
+            <section className="grid gap-3">
+              <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                Needs attention
+              </h2>
+              {data.attention.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border/80"
+                >
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-sm text-muted-foreground">{item.detail}</p>
+                </Link>
+              ))}
+            </section>
+          ) : null}
 
           <section className="grid gap-3">
             <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">

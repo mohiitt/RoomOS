@@ -1,3 +1,5 @@
+export const APARTMENT_TIME_ZONE = "America/Los_Angeles";
+
 export function toNumber(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const parsed = Number(value);
@@ -10,11 +12,13 @@ export function toNumberOrNull(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function todayISO(now = new Date()): string {
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+export function todayISO(now = new Date(), timeZone = APARTMENT_TIME_ZONE): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
 }
 
 export function addDaysISO(isoDate: string, days: number): string {

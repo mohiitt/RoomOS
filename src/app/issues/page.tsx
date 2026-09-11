@@ -42,12 +42,14 @@ export default function IssuesPage() {
     <div>
       <PageHeader title="Issues" subtitle={copy.issuesSubtitle} />
 
-      <div className="mb-4 grid grid-cols-2 gap-2">
+      <div className="mb-4 grid grid-cols-2 gap-2" role="tablist" aria-label="Issues">
         <Button
           type="button"
           variant={tab === "open" ? "default" : "outline"}
           size="lg"
           className="min-h-11"
+          role="tab"
+          aria-selected={tab === "open"}
           onClick={() => setTab("open")}
         >
           Open
@@ -57,6 +59,8 @@ export default function IssuesPage() {
           variant={tab === "resolved" ? "default" : "outline"}
           size="lg"
           className="min-h-11"
+          role="tab"
+          aria-selected={tab === "resolved"}
           onClick={() => setTab("resolved")}
         >
           Resolved

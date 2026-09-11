@@ -55,3 +55,12 @@ export function statusOnAssign(
 export function isOpenStatus(status: ConcernStatus): boolean {
   return status !== "resolved";
 }
+
+export function concernStatusAllowed(from: ConcernStatus, to: ConcernStatus): boolean {
+  if (from === to) return true;
+  if (from === "open") return to === "assigned" || to === "in_progress" || to === "resolved";
+  if (from === "assigned") return to === "open" || to === "in_progress" || to === "resolved";
+  if (from === "in_progress") return to === "assigned" || to === "resolved";
+  if (from === "resolved") return to === "open" || to === "assigned";
+  return false;
+}

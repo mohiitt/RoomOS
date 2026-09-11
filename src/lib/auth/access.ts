@@ -1,10 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-
-export function expectedAccessToken() {
-  const secret = process.env.ROOMOS_SESSION_SECRET;
-  if (!secret) return null;
-  return createHmac("sha256", secret).update("roomos-access").digest("hex");
-}
+import { verifySession } from "./token.ts";
 
 export function apartmentCookieFrom(request: Request) {
   const raw = request.headers.get("cookie")?.match(/(?:^|; )roomos_access=([^;]*)/)?.[1];
@@ -17,11 +11,7 @@ export function apartmentCookieFrom(request: Request) {
 }
 
 export function hasValidApartmentCookie(cookieValue: string | undefined) {
-  const expected = expectedAccessToken();
-  if (!expected || !cookieValue) return false;
-  const actual = Buffer.from(cookieValue);
-  const wanted = Buffer.from(expected);
-  return actual.length === wanted.length && timingSafeEqual(actual, wanted);
+  return Boolean(verifySession(cookieValue));
 }
 
 export function unauthorized() {

@@ -4,16 +4,15 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { PushSettings } from "@/components/pwa/PushSettings";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
-import { useRoommate } from "@/contexts/CurrentRoommateContext";
+import { lockThisPhone, useRoommate } from "@/contexts/CurrentRoommateContext";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { setApartmentAccess } from "@/lib/auth/storage";
 
 export default function SettingsPage() {
   const { roommate, switchRoommate } = useRoommate();
 
   return (
     <div>
-      <PageHeader title="Settings" subtitle="This phone’s roommate identity." />
+      <PageHeader title="Settings" subtitle="This phone’s roommate identity." backHref="/more" />
       {roommate ? (
         <div className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border">
           <div className="flex items-center gap-4">
@@ -38,8 +37,7 @@ export default function SettingsPage() {
             size="lg"
             className="mt-2 min-h-11 w-full"
             onClick={() => {
-              setApartmentAccess(false);
-              window.location.reload();
+              void lockThisPhone().finally(() => window.location.reload());
             }}
           >
             Lock with PIN

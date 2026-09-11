@@ -1,6 +1,6 @@
 import webpush from "web-push";
 import { getAdminInsforge } from "@/lib/insforge/admin.ts";
-import { describeError } from "@/lib/insforge/client.ts";
+import { describeError } from "@/lib/insforge/errors.ts";
 import { hrefForNotification, shouldSendPush } from "@/lib/notifications/createNotification.ts";
 import type { ApartmentNotification, NotificationType } from "@/lib/notifications/types.ts";
 
@@ -21,6 +21,14 @@ function setVapid() {
     publicKey,
     privateKey
   );
+}
+
+async function ackPush(id: string, errorMessage?: string) {
+  const { error } = await getAdminInsforge().database.rpc("ack_push_notification", {
+    p_id: id,
+    p_error: errorMessage ?? null,
+  });
+  if (error) console.error("[roomos] push ack failed", error);
 }
 
 function mapNotification(row: Raw): ApartmentNotification {
@@ -155,19 +163,27 @@ export async function dispatchPendingPush() {
       notification.type === "concern_created"
         ? await concernPriority(notification.entity_id)
         : null;
-    if (!shouldSendPush(notification.type, priority)) continue;
+    if (!shouldSendPush(notification.type, priority)) {
+      await ackPush(notification.id);
+      continue;
+    }
 
     const subs = await subscriptionsFor(notification.roommate_id);
-    await Promise.all(
-      subs.map((sub) =>
-        sendToSubscription(sub, {
-          title: notification.title,
-          body: notification.message,
-          url: hrefForNotification(notification),
-        })
-      )
-    );
-    sent += subs.length;
+    try {
+      await Promise.all(
+        subs.map((sub) =>
+          sendToSubscription(sub, {
+            title: notification.title,
+            body: notification.message,
+            url: hrefForNotification(notification),
+          })
+        )
+      );
+      await ackPush(notification.id);
+      sent += subs.length;
+    } catch (error) {
+      await ackPush(notification.id, describeError(error, "push failed"));
+    }
   }
 
   return { sent, skipped: false as const };

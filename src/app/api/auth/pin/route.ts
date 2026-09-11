@@ -1,41 +1,72 @@
-import { createHash, createHmac, timingSafeEqual } from "crypto";
-import { NextResponse } from "next/server";
+import { createHash, timingSafeEqual } from "node:crypto";
+import { z } from "zod";
+import {
+  SESSION_COOKIE,
+  sessionCookieOptions,
+  signSession,
+} from "@/lib/auth/token";
+import { getAdminInsforge } from "@/lib/insforge/admin";
+import { describeError } from "@/lib/insforge/errors";
+import { HttpError, clientIp, handle, jsonOk, readJson, requireActiveRoommate } from "@/lib/server/http";
 
-export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as { pin?: unknown } | null;
-  const pin = typeof body?.pin === "string" ? body.pin.trim() : "";
-  const expected = process.env.ROOMOS_PIN_HASH;
-  const secret = process.env.ROOMOS_SESSION_SECRET;
+const pinSchema = z.object({
+  pin: z.string().regex(/^\d{4}$/, "Enter the 4-digit apartment PIN"),
+  roommateId: z.string().uuid("Pick your name first"),
+});
 
-  if (!expected || !secret) {
-    return NextResponse.json(
-      { error: "PIN is not configured on the server" },
-      { status: 500 }
-    );
-  }
+const FAILURE_WINDOW_MS = 15 * 60 * 1000;
+const MAX_FAILURES = 5;
 
-  if (!/^\d{4}$/.test(pin)) {
-    return NextResponse.json({ error: "Enter the 4-digit apartment PIN" }, { status: 400 });
-  }
-
+function pinMatches(pin: string, expected: string) {
   const actual = createHash("sha256").update(pin).digest("hex");
   const actualBuffer = Buffer.from(actual);
   const expectedBuffer = Buffer.from(expected);
+  return actualBuffer.length === expectedBuffer.length && timingSafeEqual(actualBuffer, expectedBuffer);
+}
 
-  if (
-    actualBuffer.length !== expectedBuffer.length ||
-    !timingSafeEqual(actualBuffer, expectedBuffer)
-  ) {
-    return NextResponse.json({ error: "That PIN is not right" }, { status: 401 });
-  }
+async function recentFailures(ip: string) {
+  const since = new Date(Date.now() - FAILURE_WINDOW_MS).toISOString();
+  const { data, error } = await getAdminInsforge()
+    .database.from("pin_attempts")
+    .select("id")
+    .eq("ip", ip)
+    .eq("success", false)
+    .gte("attempted_at", since)
+    .limit(20);
+  if (error) throw new Error(describeError(error, "Could not check PIN attempts"));
+  return (data ?? []).length;
+}
 
-  const token = createHmac("sha256", secret).update("roomos-access").digest("hex");
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set("roomos_access", token, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
+async function recordAttempt(ip: string, success: boolean) {
+  const { error } = await getAdminInsforge()
+    .database.from("pin_attempts")
+    .insert([{ ip, success }]);
+  if (error) console.error("[roomos] pin attempt log failed", error);
+}
+
+export async function POST(request: Request) {
+  return handle(request, async () => {
+    const expected = process.env.ROOMOS_PIN_HASH;
+    if (!expected || !process.env.ROOMOS_SESSION_SECRET) {
+      throw new HttpError(500, "PIN is not configured on the server");
+    }
+
+    const body = await readJson(request, pinSchema);
+    await requireActiveRoommate(body.roommateId);
+
+    const ip = clientIp(request);
+    if ((await recentFailures(ip)) >= MAX_FAILURES) {
+      throw new HttpError(429, "Too many wrong PINs. Wait 15 minutes.");
+    }
+
+    if (!pinMatches(body.pin, expected)) {
+      await recordAttempt(ip, false);
+      throw new HttpError(401, "That PIN is not right");
+    }
+
+    await recordAttempt(ip, true);
+    const response = jsonOk({ ok: true, roommateId: body.roommateId });
+    response.cookies.set(SESSION_COOKIE, signSession(body.roommateId), sessionCookieOptions());
+    return response;
   });
-  return response;
 }

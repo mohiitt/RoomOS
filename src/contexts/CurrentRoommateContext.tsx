@@ -11,16 +11,20 @@ import {
 import type { Roommate } from "@/types/database";
 import {
   resolveUnlockStatus,
-  statusAfterSelectingRoommate,
   statusAfterVerifiedPin,
 } from "@/lib/auth/session";
 import {
   getStoredRoommateId,
-  hasApartmentAccess,
   setApartmentAccess,
   setStoredRoommateId,
 } from "@/lib/auth/storage";
-import { listRoommates } from "@/lib/roommates/queries";
+import {
+  fetchSession,
+  listRoommates,
+  lockSession,
+  switchSessionRoommate,
+} from "@/lib/roommates/queries";
+import { rebindPushSubscription } from "@/lib/push/browser";
 
 type SessionStatus = "loading" | "pin" | "select" | "ready" | "error";
 
@@ -46,13 +50,16 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const access = hasApartmentAccess();
-      const people = await listRoommates();
+      const [people, session] = await Promise.all([listRoommates(), fetchSession()]);
       setRoommates(people);
-      const storedId = getStoredRoommateId();
+      const storedId = session.unlocked ? session.roommateId : getStoredRoommateId();
       const current = people.find((person) => person.id === storedId) ?? null;
+      if (session.unlocked && current) {
+        setStoredRoommateId(current.id);
+        setApartmentAccess(true);
+      }
       const next = resolveUnlockStatus({
-        hasAccess: access,
+        hasAccess: session.unlocked,
         storedRoommateId: storedId,
         roommateIds: people.map((person) => person.id),
       });
@@ -76,7 +83,7 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
       storedId,
       roommates.map((person) => person.id)
     );
-    if (nextStatus !== "ready") {
+    if (nextStatus !== "ready" || !storedId) {
       setRoommate(null);
       setStatus("select");
       throw new Error("Pick your name first");
@@ -84,8 +91,9 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
 
     const response = await fetch("/api/auth/pin", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pin }),
+      body: JSON.stringify({ pin, roommateId: storedId }),
     });
     const payload = (await response.json()) as { error?: string };
 
@@ -95,7 +103,6 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
 
     const current = roommates.find((person) => person.id === storedId) ?? null;
     if (!current) {
-      setApartmentAccess(true);
       setRoommate(null);
       setStatus("select");
       return;
@@ -112,7 +119,19 @@ export function RoommateProvider({ children }: { children: React.ReactNode }) {
       if (!current) return;
       setStoredRoommateId(current.id);
       setRoommate(current);
-      setStatus(statusAfterSelectingRoommate(hasApartmentAccess()));
+      setStatus("pin");
+      void (async () => {
+        try {
+          const session = await fetchSession();
+          if (session.unlocked) {
+            await switchSessionRoommate(current.id);
+            await rebindPushSubscription();
+            setStatus("ready");
+          }
+        } catch {
+          setStatus("pin");
+        }
+      })();
     },
     [roommates]
   );
@@ -157,4 +176,10 @@ export function useRoommate() {
     throw new Error("useRoommate must be used inside RoommateProvider");
   }
   return context;
+}
+
+export async function lockThisPhone() {
+  setApartmentAccess(false);
+  setStoredRoommateId(null);
+  await lockSession();
 }

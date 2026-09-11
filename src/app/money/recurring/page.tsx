@@ -83,6 +83,7 @@ export default function RecurringPage() {
       <PageHeader
         title="Recurring"
         subtitle="Rent, internet, utilities — posted automatically when due."
+        backHref="/money"
       />
       <form onSubmit={(event) => void onCreate(event)} className="mb-8 grid gap-3 rounded-3xl bg-card p-4 ring-1 ring-border">
         <div className="grid gap-2">

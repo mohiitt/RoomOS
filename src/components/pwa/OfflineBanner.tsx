@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useOffline } from "next/offline";
 
 export function OfflineBanner() {
@@ -11,7 +10,7 @@ export function OfflineBanner() {
       role="status"
       className="bg-foreground px-4 py-2 text-center text-sm text-background"
     >
-      Offline. RoomOS will catch up when this phone is back online.
+      Offline. You can look around, but changes need a connection.
     </div>
   );
 }

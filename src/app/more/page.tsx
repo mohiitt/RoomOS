@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { UnreadDot } from "@/components/notifications/NotificationBell";
 import {
   Bell,
-  Bot,
   ClipboardList,
   Settings,
   ShoppingBasket,
@@ -16,7 +15,6 @@ const LINKS = [
   { href: "/shopping", label: "Shopping", icon: ShoppingBasket },
   { href: "/issues", label: "Issues", icon: TriangleAlert },
   { href: "/notifications", label: "Notifications", icon: Bell },
-  { href: "/assistant", label: "Assistant", icon: Bot },
   { href: "/activity", label: "Activity", icon: ClipboardList },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

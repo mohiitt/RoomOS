@@ -55,7 +55,7 @@ export default function EditInventoryPage() {
 
   return (
     <div>
-      <PageHeader title="Edit item" subtitle={item.name} />
+      <PageHeader title="Edit item" subtitle={item.name} backHref={`/inventory/${item.id}`} />
       <InventoryForm
         roommates={roommates}
         currentRoommateId={roommate.id}

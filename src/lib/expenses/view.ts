@@ -1,6 +1,12 @@
-import { calculateNets, viewerTotals } from "@/lib/expenses/calculateBalances.ts";
-import { simplifyDebts } from "@/lib/expenses/simplifyDebts.ts";
-import type { Expense, ExpenseSplit, Settlement } from "@/types/database";
+import { calculateNets, viewerTotals, type NetBalance } from "./calculateBalances.ts";
+import { simplifyDebts } from "./simplifyDebts.ts";
+import type { Expense, ExpenseSplit, Settlement } from "../../types/database.ts";
+
+export function moneyViewFromNets(nets: NetBalance[], viewerId: string) {
+  const debts = simplifyDebts(nets);
+  const totals = viewerTotals(viewerId, debts);
+  return { nets, debts, totals };
+}
 
 export function buildMoneyView(input: {
   roommateIds: string[];
@@ -32,8 +38,5 @@ export function buildMoneyView(input: {
     }))
   );
 
-  const debts = simplifyDebts(nets);
-  const totals = viewerTotals(input.viewerId, debts);
-
-  return { nets, debts, totals, splitsByExpense };
+  return { ...moneyViewFromNets(nets, input.viewerId), splitsByExpense };
 }

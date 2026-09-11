@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -56,7 +55,7 @@ export default function RecipeDetailPage() {
   if (error || !recipe) {
     return (
       <div>
-        <PageHeader title="Recipe" />
+        <PageHeader title="Recipe" backHref="/inventory?tab=recipes" />
         <p className="text-sm text-destructive">{error ?? "Recipe not found."}</p>
       </div>
     );
@@ -64,13 +63,11 @@ export default function RecipeDetailPage() {
 
   return (
     <div>
-      <Link
-        href="/inventory?tab=recipes"
-        className="mb-3 inline-block text-sm font-medium text-primary"
-      >
-        Back to recipes
-      </Link>
-      <PageHeader title={recipe.name} subtitle={author ? `Added by ${author.name}` : undefined} />
+      <PageHeader
+        title={recipe.name}
+        subtitle={author ? `Added by ${author.name}` : undefined}
+        backHref="/inventory?tab=recipes"
+      />
 
       <section className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border">
         <h2 className="text-sm font-medium text-muted-foreground">Ingredients</h2>

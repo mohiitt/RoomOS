@@ -68,7 +68,7 @@ export default function ExpenseDetailPage() {
 
   return (
     <div className="pb-8">
-      <PageHeader title={expense.title} subtitle={labelForCategory(expense.category)} />
+      <PageHeader title={expense.title} subtitle={labelForCategory(expense.category)} backHref="/money" />
       <section className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border">
         <p className="font-heading text-4xl">{formatMoney(expense.amount)}</p>
         <div className="mt-4 flex flex-wrap gap-2">

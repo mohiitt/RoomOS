@@ -55,7 +55,7 @@ export function IssueForm({
   return (
     <form className="grid gap-4" onSubmit={(event) => void handleSubmit(event)}>
       <div className="grid gap-2">
-        <Label htmlFor="issue-title">What's wrong?</Label>
+        <Label htmlFor="issue-title">What is wrong?</Label>
         <Input
           id="issue-title"
           className="min-h-12 text-base"

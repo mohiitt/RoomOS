@@ -152,7 +152,11 @@ export default function IssueDetailPage() {
 
   return (
     <div className="grid gap-5 pb-10">
-      <PageHeader title={concern.title} subtitle={concern.description ?? undefined} />
+      <PageHeader
+        title={concern.title}
+        subtitle={concern.description ?? undefined}
+        backHref="/issues"
+      />
 
       <section className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border">
         <div className="flex flex-wrap gap-2">
@@ -278,14 +282,14 @@ export default function IssueDetailPage() {
             {photos.map((photo) => (
               <a
                 key={photo.id}
-                href={photo.storage_url}
+                href={`/api/issues/${concern.id}/photos/${photo.id}`}
                 target="_blank"
                 rel="noreferrer"
                 className="overflow-hidden rounded-2xl ring-1 ring-border"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={photo.storage_url}
+                  src={`/api/issues/${concern.id}/photos/${photo.id}`}
                   alt=""
                   className="aspect-square w-full object-cover"
                 />

@@ -7,8 +7,6 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { InventoryForm } from "@/components/inventory/InventoryForm";
 import { useRoommate } from "@/contexts/CurrentRoommateContext";
 import { createInventoryItem } from "@/lib/inventory/queries";
-import { adjustInventoryQuantity } from "@/lib/inventory/updateQuantity";
-import { syncLowStock } from "@/lib/shopping/syncLowStock";
 import type { InventoryInput } from "@/lib/inventory/schema";
 
 export default function NewInventoryPage() {
@@ -20,9 +18,9 @@ export default function NewInventoryPage() {
     if (!roommate) return;
     setBusy(true);
     try {
-      const item = await createInventoryItem({
+      await createInventoryItem({
         name: values.name,
-        quantity: 0,
+        quantity: values.quantity,
         unit: values.unit,
         category: values.category,
         storage_location: values.storage_location,
@@ -37,21 +35,10 @@ export default function NewInventoryPage() {
         notes: values.notes || null,
         created_by: roommate.id,
       });
-
-      let saved = item;
-      if (values.quantity > 0) {
-        saved = await adjustInventoryQuantity({
-          itemId: item.id,
-          roommateId: roommate.id,
-          transactionType: "add",
-          quantityChange: values.quantity,
-          note: "Initial stock",
-        });
-      }
-
-      await syncLowStock(saved, roommate.id);
       toast.success("Item added");
       router.push("/inventory");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not add item");
     } finally {
       setBusy(false);
     }
@@ -59,7 +46,7 @@ export default function NewInventoryPage() {
 
   return (
     <div>
-      <PageHeader title="Add item" subtitle="What just arrived in the apartment?" />
+      <PageHeader title="Add item" subtitle="What just arrived in the apartment?" backHref="/inventory" />
       {roommate ? (
         <InventoryForm
           roommates={roommates}

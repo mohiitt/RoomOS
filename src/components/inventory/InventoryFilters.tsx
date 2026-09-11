@@ -22,12 +22,13 @@ export function InventoryFilters({
   onChange: (value: InventoryFilter) => void;
 }) {
   return (
-    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="Inventory filters">
       {FILTERS.map((filter) => (
         <button
           key={filter.value}
           type="button"
           onClick={() => onChange(filter.value)}
+          aria-pressed={value === filter.value}
           className={cn(
             "h-9 shrink-0 rounded-full px-3 text-sm font-medium ring-1",
             value === filter.value

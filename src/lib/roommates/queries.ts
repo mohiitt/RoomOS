@@ -1,14 +1,21 @@
-import { describeError, getInsforge } from "@/lib/insforge/client";
+import { apiJson } from "@/lib/api/browser";
 import type { Roommate } from "@/types/database";
 
 export async function listRoommates(): Promise<Roommate[]> {
-  const { data, error } = await getInsforge()
-    .database.from("roommates")
-    .select("id, name, avatar_url, is_active, created_at")
-    .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .limit(10);
+  return apiJson<Roommate[]>("/api/auth/roommates");
+}
 
-  if (error) throw new Error(describeError(error, "Could not load roommates"));
-  return (data ?? []) as Roommate[];
+export async function fetchSession() {
+  return apiJson<{ unlocked: boolean; roommateId: string | null }>("/api/auth/session");
+}
+
+export async function switchSessionRoommate(roommateId: string) {
+  return apiJson<{ ok: true; roommateId: string }>("/api/auth/roommate", {
+    method: "POST",
+    body: JSON.stringify({ roommateId }),
+  });
+}
+
+export async function lockSession() {
+  return apiJson<{ ok: true }>("/api/auth/lock", { method: "POST" });
 }

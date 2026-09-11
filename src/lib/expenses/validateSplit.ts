@@ -24,7 +24,7 @@ function allocateByWeights(totalCents: number, weights: number[]): number[] {
 
   const raw = weights.map((weight) => (totalCents * weight) / weightSum);
   const floors = raw.map((value) => Math.floor(value));
-  let remainder = totalCents - floors.reduce((sum, value) => sum + value, 0);
+  const remainder = totalCents - floors.reduce((sum, value) => sum + value, 0);
   const order = raw
     .map((value, index) => ({ index, fraction: value - floors[index] }))
     .sort((a, b) => b.fraction - a.fraction || a.index - b.index);
