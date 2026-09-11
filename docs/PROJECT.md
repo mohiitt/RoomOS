@@ -370,6 +370,6 @@ Backups: `npx -y @insforge/cli backups create --name <label>`. Restore overwrite
 
 ## Related docs
 
-- [`README.md`](./README.md) — short product intro and run steps
+- [`README.md`](../README.md) — short product intro and run steps
 - [`RoomOS_Full_Implementation_Plan.md`](./RoomOS_Full_Implementation_Plan.md) — original long product plan (includes a deferred assistant; that part is not being built)
-- [`.env.example`](./.env.example) — required environment variables
+- [`.env.example`](../.env.example) — required environment variables
