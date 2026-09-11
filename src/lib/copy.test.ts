@@ -22,5 +22,6 @@ test("PIN and card asides stay roommate-chat", () => {
   assert.equal(wrongPinLine(4), copy.wrongPin[0]);
   assert.equal(balanceAside(0), "Nobody owes nobody. Weird.");
   assert.equal(foodAside(2), "The milk is writing its will.");
+  assert.equal(copy.homeQuietTitle, "Quiet. Too quiet.");
   assert.match(copy.landingHeadline, /Zero group-chat math/);
 });

@@ -20,6 +20,9 @@ export const copy = {
   ],
   homeSubtitle: "The fridge is judging you. Affectionately.",
   activityEmpty: "Quiet. Too quiet. Someone should cook.",
+  homeQuietTitle: "Quiet. Too quiet.",
+  homeQuietBody:
+    "Nobody spent, nobody cooked, the sponge is unemployed. Start something before the fridge files a complaint.",
   foodSubtitle: "What's in the fridge, freezer, and pantry.",
   foodEmptyTitle: "The fridge is giving you nothing.",
   foodEmptyBody: "Add something before the next person asks who ate the last yogurt.",

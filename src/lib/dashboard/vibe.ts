@@ -32,7 +32,7 @@ export function apartmentVibe(input: {
   if (input.moneyNet !== 0) {
     return { mood: "mostly chill", line: "Nothing's on fire. The fridge is still watching." };
   }
-  return { mood: "chill", line: "Apartment vibe: chill. The fridge is judging you. Affectionately." };
+  return { mood: "chill", line: "The fridge is judging you. Affectionately." };
 }
 
 export function moneyStatLabel(net: number): string {
@@ -77,4 +77,12 @@ export function roommateOfTheWeek(
   const winner = ranked[0];
   if (!winner) return null;
   return { id: winner.id, name: winner.name, points: winner.points };
+}
+
+export function homeIsQuiet(input: {
+  attentionCount: number;
+  activityCount: number;
+  hasRoommateOfWeek: boolean;
+}) {
+  return input.attentionCount === 0 && input.activityCount === 0 && !input.hasRoommateOfWeek;
 }

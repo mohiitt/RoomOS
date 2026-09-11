@@ -5,6 +5,7 @@ import {
   apartmentVibe,
   choreStatLabel,
   foodStatLabel,
+  homeIsQuiet,
   moneyStatLabel,
   roommateOfTheWeek,
   streakCopy,
@@ -15,10 +16,9 @@ test("apartment vibe prefers sponge drama over money", () => {
     apartmentVibe({ overdueChores: 2, openUrgent: 0, moneyNet: 80, expiring: 4 }).mood,
     "sponge drama"
   );
-  assert.equal(
-    apartmentVibe({ overdueChores: 0, openUrgent: 0, moneyNet: 0, expiring: 0 }).mood,
-    "chill"
-  );
+  const chill = apartmentVibe({ overdueChores: 0, openUrgent: 0, moneyNet: 0, expiring: 0 });
+  assert.equal(chill.mood, "chill");
+  assert.equal(chill.line, "The fridge is judging you. Affectionately.");
 });
 
 test("stat cards are numbers, not call-to-action copy", () => {
@@ -63,6 +63,17 @@ test("needs attention includes stale owed, overdue chores, expiring food, assign
 test("zero streak shrugs instead of reading as a failure number", () => {
   assert.equal(streakCopy(0).shrugging, true);
   assert.equal(streakCopy(3).label, "3 week flame");
+});
+
+test("quiet home is no attention, no activity, nobody of the week", () => {
+  assert.equal(
+    homeIsQuiet({ attentionCount: 0, activityCount: 0, hasRoommateOfWeek: false }),
+    true
+  );
+  assert.equal(
+    homeIsQuiet({ attentionCount: 1, activityCount: 0, hasRoommateOfWeek: false }),
+    false
+  );
 });
 
 test("roommate of the week is most points, then earliest completion", () => {

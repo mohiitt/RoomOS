@@ -16,7 +16,7 @@ export function StatTile({
     <Link
       href={href}
       className={cn(
-        "rounded-2xl px-4 py-3 ring-1 shadow-sm",
+        "block h-auto w-full self-start rounded-2xl px-4 py-3 ring-1 shadow-sm",
         tone === "warn"
           ? "bg-primary/8 ring-primary/30"
           : "bg-card ring-border/80"

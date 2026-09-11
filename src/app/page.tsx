@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityRow } from "@/components/dashboard/ActivityRow";
+import { HomeQuiet } from "@/components/dashboard/HomeQuiet";
 import { StatTile } from "@/components/dashboard/StatTile";
 import { StreakFlame } from "@/components/dashboard/StreakFlame";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -14,8 +15,9 @@ import {
   getDashboardData,
   type DashboardData,
 } from "@/lib/dashboard/getDashboardData.ts";
+import { homeIsQuiet } from "@/lib/dashboard/vibe.ts";
 import { useRealtimeDashboard } from "@/hooks/useRealtime.ts";
-import { greeting } from "@/lib/copy";
+import { copy, greeting } from "@/lib/copy";
 
 export default function HomePage() {
   const { roommate, roommates } = useRoommate();
@@ -43,8 +45,16 @@ export default function HomePage() {
   }, [load]);
   useRealtimeDashboard(load);
 
+  const quiet = data
+    ? homeIsQuiet({
+        attentionCount: data.attention.length,
+        activityCount: data.recentActivity.length,
+        hasRoommateOfWeek: Boolean(data.roommateOfWeek),
+      })
+    : false;
+
   return (
-    <div className="pb-8">
+    <div className="flex min-h-[calc(100svh-7.5rem)] flex-col pb-8">
       <PageHeader
         title={`${greeting(new Date(), roommate?.name)}`}
         subtitle={data ? `Apartment vibe: ${data.vibe.mood}. ${data.vibe.line}` : undefined}
@@ -61,7 +71,7 @@ export default function HomePage() {
       ) : error ? (
         <p className="text-sm text-destructive">{error}</p>
       ) : data ? (
-        <div className="grid gap-5">
+        <div className="flex flex-1 flex-col gap-5">
           {data.attention.length > 0 ? (
             <section className="grid gap-3">
               <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
@@ -80,7 +90,7 @@ export default function HomePage() {
             </section>
           ) : null}
 
-          <section className="grid grid-cols-2 gap-3">
+          <section className="grid grid-cols-2 items-start gap-3">
             <StatTile
               href="/money"
               label="Balance"
@@ -98,7 +108,7 @@ export default function HomePage() {
             <StatTile href="/issues" label="Issues" value={data.errors.issues ?? data.issueStat} />
             <Link
               href="/chores"
-              className="rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border/80"
+              className="block h-auto w-full self-start rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border/80"
             >
               <p className="text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
                 Your streak
@@ -113,37 +123,43 @@ export default function HomePage() {
             </Link>
           </section>
 
-          {data.roommateOfWeek ? (
-            <section className="rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border/80">
-              <p className="text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                Roommate of the week
-              </p>
-              <p className="mt-1 font-heading text-xl leading-tight">
-                {data.roommateOfWeek.name}
-              </p>
-              <p className="text-sm text-foreground/80">
-                {data.roommateOfWeek.points} points this cycle. The sponge is proud.
-              </p>
-            </section>
-          ) : null}
+          {quiet ? (
+            <HomeQuiet />
+          ) : (
+            <>
+              {data.roommateOfWeek ? (
+                <section className="rounded-2xl bg-card px-4 py-3 shadow-sm ring-1 ring-border/80">
+                  <p className="text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                    Roommate of the week
+                  </p>
+                  <p className="mt-1 font-heading text-xl leading-tight">
+                    {data.roommateOfWeek.name}
+                  </p>
+                  <p className="text-sm text-foreground/80">
+                    {data.roommateOfWeek.points} points this cycle. The sponge is proud.
+                  </p>
+                </section>
+              ) : null}
 
-          <section className="grid gap-3">
-            <div className="flex items-end justify-between gap-3">
-              <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                Recent activity
-              </h2>
-              <Link href="/activity" className="text-sm font-medium text-primary">
-                View all
-              </Link>
-            </div>
-            {data.recentActivity.length === 0 ? (
-              <p className="text-sm text-foreground/80">Quiet. Too quiet. Someone should cook.</p>
-            ) : (
-              data.recentActivity.slice(0, 3).map((event) => (
-                <ActivityRow key={event.id} event={event} roommates={roommates} />
-              ))
-            )}
-          </section>
+              <section className="grid gap-3">
+                <div className="flex items-end justify-between gap-3">
+                  <h2 className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                    Recent activity
+                  </h2>
+                  <Link href="/activity" className="text-sm font-medium text-primary">
+                    View all
+                  </Link>
+                </div>
+                {data.recentActivity.length === 0 ? (
+                  <p className="text-sm text-foreground/80">{copy.activityEmpty}</p>
+                ) : (
+                  data.recentActivity.slice(0, 3).map((event) => (
+                    <ActivityRow key={event.id} event={event} roommates={roommates} />
+                  ))
+                )}
+              </section>
+            </>
+          )}
         </div>
       ) : null}
     </div>
